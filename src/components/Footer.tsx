@@ -1,5 +1,5 @@
-import { Mail, Phone, MapPin } from "lucide-react";
-import logo from "@/assets/setlix-logo.png";
+import { Mail, Phone, MapPin, Instagram } from "lucide-react";
+import icon from "@/assets/setlix-icon.png";
 
 const Footer = () => {
   return (
@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src={logo} alt="Setlix" className="h-10 w-10 object-contain" />
+              <img src={icon} alt="Setlix" className="h-8 w-8 object-contain rounded" />
               <span className="font-bold text-xl tracking-wider">SETLIX</span>
             </div>
           </div>
@@ -19,7 +19,7 @@ const Footer = () => {
               <li><a href="#about" className="hover:text-primary-foreground transition-colors">About Us</a></li>
               <li><a href="#services" className="hover:text-primary-foreground transition-colors">Services</a></li>
               <li><a href="#contact" className="hover:text-primary-foreground transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-primary-foreground transition-colors">Privacy Policy</a></li>
+              <li><a href="/privacy-policy" className="hover:text-primary-foreground transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
 
@@ -37,6 +37,12 @@ const Footer = () => {
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 Lisbon, Portugal
+              </li>
+              <li className="flex items-center gap-2">
+                <Instagram className="w-4 h-4" />
+                <a href="https://instagram.com/setlix.pt" target="_blank" rel="noopener noreferrer" className="hover:text-primary-foreground transition-colors">
+                  @setlix.pt
+                </a>
               </li>
             </ul>
           </div>
