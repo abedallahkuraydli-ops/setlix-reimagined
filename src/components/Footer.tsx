@@ -1,5 +1,5 @@
-import { Mail, Phone, MapPin } from "lucide-react";
-import logo from "@/assets/setlix-logo.png";
+import { Mail, Phone, MapPin, Instagram } from "lucide-react";
+import icon from "@/assets/setlix-icon.png";
 
 const Footer = () => {
   return (
