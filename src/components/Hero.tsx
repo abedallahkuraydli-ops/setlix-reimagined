@@ -10,7 +10,6 @@ const Hero = () => {
       </div>
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <img src={icon} alt="Setlix icon" className="w-44 h-44 mx-auto mb-8 object-contain" />
 
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-primary-foreground tracking-tight mb-4">
           SETLIX
