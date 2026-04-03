@@ -1,4 +1,4 @@
-import { FileText, Landmark, Home, Users } from "lucide-react";
+import { FileText, Landmark, Home, Users, Award } from "lucide-react";
 
 const services = [
   {
@@ -46,6 +46,24 @@ const services = [
       "Discounted wine tours",
       "Tour-guided sightseeing",
       "Monthly trips to discover Portugal",
+    ],
+  },
+  {
+    icon: Award,
+    title: "Golden Visa",
+    description: "Simplified Golden Visa process by handling every legal, administrative, and investment step so you can secure residency in Portugal with clarity, speed, and confidence.",
+    items: [
+      "Initial Eligibility Assessment & Strategy",
+      "Investment Advisory & Opportunity Sourcing",
+      "Legal Structuring & Immigration Support",
+      "Tax Advisory & Compliance",
+      "Banking & Financial Setup",
+      "End-to-End Application Management",
+      "Family Inclusion & Planning",
+      "AIMA Appointment & Residency Support",
+      "Renewals & Ongoing Compliance",
+      "Citizenship Pathway Support",
+      "Post-Relocation & Lifestyle Services",
     ],
   },
 ];
