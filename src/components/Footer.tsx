@@ -38,6 +38,12 @@ const Footer = () => {
                 <MapPin className="w-4 h-4" />
                 Lisbon, Portugal
               </li>
+              <li className="flex items-center gap-2">
+                <Instagram className="w-4 h-4" />
+                <a href="https://instagram.com/setlix.pt" target="_blank" rel="noopener noreferrer" className="hover:text-primary-foreground transition-colors">
+                  @setlix.pt
+                </a>
+              </li>
             </ul>
           </div>
         </div>
