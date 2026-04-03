@@ -51,7 +51,7 @@ const services = [
   {
     icon: Award,
     title: "Golden Visa",
-    description: "Simplified Golden Visa process by handling every legal, administrative, and investment step so you can secure residency in Portugal with clarity, speed, and confidence.",
+    description: "Simplified golden visa process to ensure your residency in Portugal with clarity, security, and confidence.",
     items: [
       "Initial Eligibility Assessment & Strategy",
       "Investment Advisory & Opportunity Sourcing",
@@ -59,11 +59,6 @@ const services = [
       "Tax Advisory & Compliance",
       "Banking & Financial Setup",
       "End-to-End Application Management",
-      "Family Inclusion & Planning",
-      "AIMA Appointment & Residency Support",
-      "Renewals & Ongoing Compliance",
-      "Citizenship Pathway Support",
-      "Post-Relocation & Lifestyle Services",
     ],
   },
 ];
