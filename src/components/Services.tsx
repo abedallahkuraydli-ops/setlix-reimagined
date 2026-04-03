@@ -40,7 +40,7 @@ const services = [
   {
     icon: Users,
     title: "Community & Networking",
-    description: "Because it isn't just about where you live — but also who you meet, where you go, and the connections you make.",
+    description: "Because it isn't just about where you live but also who you meet, where you go, and the connections you make.",
     items: [
       "Access to networking events",
       "Discounted wine tours",
