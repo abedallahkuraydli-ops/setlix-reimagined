@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import logo from "@/assets/setlix-logo.png";
+import icon from "@/assets/setlix-icon.png";
 
 const navLinks = [
   { label: "About", href: "#about" },
