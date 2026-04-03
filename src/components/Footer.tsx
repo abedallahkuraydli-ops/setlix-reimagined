@@ -27,7 +27,7 @@ const Footer = () => {
             <ul className="space-y-3 text-sm text-primary-foreground/70">
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                info@setlix.pt
+                <a href="mailto:info@setlix.pt" className="hover:text-primary-foreground transition-colors">info@setlix.pt</a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
