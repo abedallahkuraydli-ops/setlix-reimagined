@@ -41,8 +41,7 @@ const Features = () => {
           Why Setlix?
         </p>
         <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-center">
-          Perfect for startups and<br />
-          <span className="text-primary">Digital Nomads</span>
+           Perfect for <span className="text-primary">Everyone</span>
         </h2>
         <div className="w-16 h-1 bg-primary mx-auto mb-14 rounded-full" />
 

@@ -1,4 +1,4 @@
-import icon from "@/assets/setlix-icon.png";
+
 
 const Hero = () => {
   return (
