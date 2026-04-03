@@ -4,7 +4,7 @@ const features = [
   {
     icon: Zap,
     title: "Fast Company Setup",
-    description: "Start operating in weeks not months",
+    description: "Start operating in weeks",
   },
   {
     icon: Shield,
