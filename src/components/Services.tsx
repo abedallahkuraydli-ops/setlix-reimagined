@@ -1,4 +1,4 @@
-import { FileText, Landmark, Home, Users } from "lucide-react";
+import { FileText, Landmark, Home, Users, Award } from "lucide-react";
 
 const services = [
   {
