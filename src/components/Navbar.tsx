@@ -3,10 +3,10 @@ import { Menu, X } from "lucide-react";
 import icon from "@/assets/setlix-icon.png";
 
 const navLinks = [
-  { label: "About", href: "#about" },
-  { label: "Features", href: "#features" },
-  { label: "Services", href: "#services" },
-  { label: "Contact", href: "#contact" },
+  { label: "About", href: "/#about" },
+  { label: "Features", href: "/#features" },
+  { label: "Services", href: "/#services" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 const Navbar = () => {
