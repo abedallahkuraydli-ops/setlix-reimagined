@@ -1,5 +1,4 @@
 import { Mail, Phone, MapPin, Instagram } from "lucide-react";
-import icon from "@/assets/setlix-icon.png";
 
 const Footer = () => {
   return (
@@ -8,7 +7,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src={icon} alt="Setlix" className="h-8 w-8 object-contain rounded" />
+              <span className="font-black text-4xl leading-none">✳</span>
               <span className="font-bold text-xl tracking-wider">SETLIX</span>
             </div>
           </div>
