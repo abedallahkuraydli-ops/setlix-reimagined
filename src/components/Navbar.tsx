@@ -3,10 +3,10 @@ import { Menu, X } from "lucide-react";
 import icon from "@/assets/setlix-icon.png";
 
 const navLinks = [
-  { label: "About", href: "#about" },
-  { label: "Features", href: "#features" },
-  { label: "Services", href: "#services" },
-  { label: "Contact", href: "#contact" },
+  { label: "About", href: "/#about" },
+  { label: "Features", href: "/#features" },
+  { label: "Services", href: "/#services" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 const Navbar = () => {
@@ -15,7 +15,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-primary-foreground/10">
       <div className="container mx-auto flex items-center justify-between py-3 px-4">
-        <a href="#" className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2">
           <img src={icon} alt="Setlix" className="h-8 w-8 object-contain rounded" />
           <span className="text-primary-foreground font-bold text-xl tracking-wider">SETLIX</span>
         </a>
