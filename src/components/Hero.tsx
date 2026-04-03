@@ -1,4 +1,4 @@
-import logo from "@/assets/setlix-logo.png";
+import icon from "@/assets/setlix-icon.png";
 
 const Hero = () => {
   return (
@@ -10,7 +10,7 @@ const Hero = () => {
       </div>
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <img src={logo} alt="Setlix" className="w-32 h-32 mx-auto mb-8 object-contain" />
+        <img src={icon} alt="Setlix icon" className="w-44 h-44 mx-auto mb-8 object-contain" />
 
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-primary-foreground tracking-tight mb-4">
           SETLIX
@@ -21,7 +21,7 @@ const Hero = () => {
         </h2>
 
         <p className="text-primary-foreground/70 text-lg md:text-xl font-light italic mb-10 max-w-2xl mx-auto">
-          Your all-in-one partner for your life in Portugal
+          Portugal without a Hassle
         </p>
 
         <a
