@@ -5,10 +5,12 @@ import Features from "@/components/Features";
 import Services from "@/components/Services";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import BackToTop from "@/components/BackToTop";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
+      <BackToTop />
       <Navbar />
       <Hero />
       <About />
