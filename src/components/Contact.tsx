@@ -136,50 +136,11 @@ const Contact = () => {
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Phone Number</label>
               <div className="flex gap-2">
-                <select className="w-28 shrink-0 rounded-lg border border-input bg-background px-2 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                <select className="w-32 shrink-0 rounded-lg border border-input bg-background px-2 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
                   <option value="">Code</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+44">🇬🇧 +44</option>
-                  <option value="+351">🇵🇹 +351</option>
-                  <option value="+33">🇫🇷 +33</option>
-                  <option value="+49">🇩🇪 +49</option>
-                  <option value="+34">🇪🇸 +34</option>
-                  <option value="+39">🇮🇹 +39</option>
-                  <option value="+55">🇧🇷 +55</option>
-                  <option value="+91">🇮🇳 +91</option>
-                  <option value="+86">🇨🇳 +86</option>
-                  <option value="+81">🇯🇵 +81</option>
-                  <option value="+82">🇰🇷 +82</option>
-                  <option value="+61">🇦🇺 +61</option>
-                  <option value="+7">🇷🇺 +7</option>
-                  <option value="+971">🇦🇪 +971</option>
-                  <option value="+966">🇸🇦 +966</option>
-                  <option value="+27">🇿🇦 +27</option>
-                  <option value="+234">🇳🇬 +234</option>
-                  <option value="+52">🇲🇽 +52</option>
-                  <option value="+54">🇦🇷 +54</option>
-                  <option value="+31">🇳🇱 +31</option>
-                  <option value="+46">🇸🇪 +46</option>
-                  <option value="+47">🇳🇴 +47</option>
-                  <option value="+48">🇵🇱 +48</option>
-                  <option value="+41">🇨🇭 +41</option>
-                  <option value="+90">🇹🇷 +90</option>
-                  <option value="+20">🇪🇬 +20</option>
-                  <option value="+62">🇮🇩 +62</option>
-                  <option value="+60">🇲🇾 +60</option>
-                  <option value="+63">🇵🇭 +63</option>
-                  <option value="+65">🇸🇬 +65</option>
-                  <option value="+66">🇹🇭 +66</option>
-                  <option value="+84">🇻🇳 +84</option>
-                  <option value="+353">🇮🇪 +353</option>
-                  <option value="+32">🇧🇪 +32</option>
-                  <option value="+43">🇦🇹 +43</option>
-                  <option value="+30">🇬🇷 +30</option>
-                  <option value="+45">🇩🇰 +45</option>
-                  <option value="+358">🇫🇮 +358</option>
-                  <option value="+64">🇳🇿 +64</option>
-                  <option value="+56">🇨🇱 +56</option>
-                  <option value="+57">🇨🇴 +57</option>
+                  {countryCodes.map((c) => (
+                    <option key={`${c.country}-${c.code}`} value={c.code}>{c.flag} {c.code}</option>
+                  ))}
                 </select>
                 <input
                   type="tel"
