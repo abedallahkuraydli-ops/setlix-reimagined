@@ -1,4 +1,5 @@
 import { FileText, Landmark, Home, Users, Award } from "lucide-react";
+import ServiceCard from "./ServiceCard";
 
 const services = [
   {
@@ -74,24 +75,7 @@ const Services = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {services.map((service) => (
-            <div
-              key={service.title}
-              className="bg-card rounded-xl p-8 border border-border hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-5">
-                <service.icon className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">{service.title}</h3>
-              <p className="text-muted-foreground text-sm mb-5 leading-relaxed">{service.description}</p>
-              <ul className="space-y-2">
-                {service.items.map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-foreground/80">
-                    <span className="text-primary mt-1 text-xs">●</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <ServiceCard key={service.title} {...service} />
           ))}
         </div>
 
