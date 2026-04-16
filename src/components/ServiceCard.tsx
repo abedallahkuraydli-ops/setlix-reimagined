@@ -43,10 +43,6 @@ const ServiceCard = ({ icon: Icon, title, description, items }: ServiceCardProps
           className="absolute inset-0 bg-card rounded-xl border border-border p-8 overflow-auto"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
-          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-            <Icon className="w-6 h-6 text-primary" />
-          </div>
-          <h3 className="text-xl font-bold text-foreground mb-3">{title}</h3>
           <p className="text-muted-foreground text-sm mb-4 leading-relaxed">{description}</p>
           <ul className="space-y-2">
             {items.map((item) => (
