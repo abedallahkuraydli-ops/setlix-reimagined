@@ -136,7 +136,7 @@ const Contact = () => {
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Phone Number *</label>
               <div className="flex gap-2">
-                <select className="w-32 shrink-0 rounded-lg border border-input bg-background px-2 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                <select required className="w-32 shrink-0 rounded-lg border border-input bg-background px-2 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
                   <option value="">Code</option>
                   {countryCodes.map((c) => (
                     <option key={`${c.country}-${c.code}`} value={c.code}>{c.flag} {c.code}</option>
@@ -144,6 +144,7 @@ const Contact = () => {
                 </select>
                 <input
                   type="tel"
+                  required
                   className="flex-1 rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="Phone Number"
                 />
