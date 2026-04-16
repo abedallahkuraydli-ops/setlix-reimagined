@@ -134,7 +134,7 @@ const Contact = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Phone Number</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Phone Number *</label>
               <div className="flex gap-2">
                 <select className="w-32 shrink-0 rounded-lg border border-input bg-background px-2 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
                   <option value="">Code</option>
