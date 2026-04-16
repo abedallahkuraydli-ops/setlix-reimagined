@@ -53,13 +53,6 @@ const ServiceCard = ({ icon: Icon, title, description, items }: ServiceCardProps
             ))}
           </ul>
         </div>
-              <li key={item} className="flex items-start gap-2 text-sm text-foreground/80">
-                <span className="text-primary mt-1 text-xs">●</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </div>
   );
