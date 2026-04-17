@@ -1,10 +1,21 @@
-import { FileText, Landmark, Home, Users, Award } from "lucide-react";
+import { Building2, FileText, Landmark, Home, Users, Award } from "lucide-react";
 import ServiceCard from "./ServiceCard";
 
 const services = [
   {
+    icon: Building2,
+    title: "Company Registration",
+    description: "Establish your company in Portugal with a complete registration process handled end-to-end.",
+    items: [
+      "Virtual Address",
+      "Certificate of Admissibility",
+      "Company Incorporation",
+      "Special License Registration (if required)",
+    ],
+  },
+  {
     icon: FileText,
-    title: "Administrative Services",
+    title: "Administrative",
     description: "Complete your legal setup from confirming your visa documents and appointment to your regulatory operations in Portugal.",
     items: [
       "Confirming your visa document",
@@ -16,7 +27,7 @@ const services = [
   },
   {
     icon: Landmark,
-    title: "Financial Services",
+    title: "Financial",
     description: "Bank Account, financial planning, and all the financial services to ensure your new life in Portugal is as smooth as possible.",
     items: [
       "Bank Account Opening",
@@ -27,8 +38,21 @@ const services = [
     ],
   },
   {
+    icon: Award,
+    title: "Golden Visa",
+    description: "Simplified golden visa process to ensure your residency in Portugal with clarity, security, and confidence.",
+    items: [
+      "Initial Eligibility Assessment & Strategy",
+      "Investment Advisory & Opportunity Sourcing",
+      "Legal Structuring & Immigration Support",
+      "Tax Advisory & Compliance",
+      "Banking & Financial Setup",
+      "End-to-End Application Management",
+    ],
+  },
+  {
     icon: Home,
-    title: "Relocation Services",
+    title: "Relocation",
     description: "Comprehensive support to settle smoothly into life in Portugal.",
     items: [
       "House and/or Office Scouting",
@@ -44,22 +68,8 @@ const services = [
     description: "Because it isn't just about where you live but also who you meet, where you go, and the connections you make.",
     items: [
       "Access to networking events",
-      "Discounted wine tours",
       "Tour-guided sightseeing",
       "Monthly trips to discover Portugal",
-    ],
-  },
-  {
-    icon: Award,
-    title: "Golden Visa",
-    description: "Simplified golden visa process to ensure your residency in Portugal with clarity, security, and confidence.",
-    items: [
-      "Initial Eligibility Assessment & Strategy",
-      "Investment Advisory & Opportunity Sourcing",
-      "Legal Structuring & Immigration Support",
-      "Tax Advisory & Compliance",
-      "Banking & Financial Setup",
-      "End-to-End Application Management",
     ],
   },
 ];
