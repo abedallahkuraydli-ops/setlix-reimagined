@@ -5,7 +5,7 @@ const stats = [
   { icon: Building2, value: 20, suffix: "+", label: "Companies Registered" },
   { icon: Clock, value: 1, suffix: "", label: "Week Avg. Incorporation Time" },
   { icon: Users, value: 60, suffix: "+", label: "Digital Nomads Relocated" },
-  { icon: Smile, value: 98, suffix: "%", label: "Client Satisfaction Rate" },
+  { icon: Smile, value: 90, suffix: "%", label: "Client Satisfaction Rate" },
 ];
 
 const StatItem = ({
