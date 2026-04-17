@@ -15,7 +15,7 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-primary-foreground/10">
       <div className="container mx-auto flex items-center justify-between py-3 px-4">
         <a href="/" className="flex items-center gap-2">
-          <span className="text-primary-foreground font-black text-4xl leading-none">✳</span>
+          <span className="text-primary-foreground font-black text-4xl leading-none font-sans">✳</span>
           <span className="text-primary-foreground font-bold text-xl tracking-wider">SETLIX</span>
         </a>
 
