@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const countryCodes = [
   { code: "+93", country: "Afghanistan", flag: "🇦🇫" }, { code: "+355", country: "Albania", flag: "🇦🇱" }, { code: "+213", country: "Algeria", flag: "🇩🇿" },
@@ -98,7 +100,72 @@ const categories = [
 ];
 
 const Contact = () => {
-  const [charCount, setCharCount] = useState(0);
+  const [form, setForm] = useState({
+    name: "", email: "", phoneCode: "", phone: "", country: "", category: "", subject: "", message: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+
+    const id = crypto.randomUUID();
+    const fullPhone = `${form.phoneCode} ${form.phone}`.trim();
+    const data = {
+      name: form.name,
+      email: form.email,
+      phone: fullPhone,
+      country: form.country,
+      category: form.category,
+      subject: form.subject,
+      message: form.message,
+    };
+
+    try {
+      // Send notification to info@setlix.pt (recipient is fixed in template `to` field)
+      const notify = supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "contact-notification",
+          recipientEmail: "info@setlix.pt",
+          idempotencyKey: `contact-notify-${id}`,
+          templateData: data,
+        },
+      });
+      // Send confirmation to the user
+      const confirm = supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "contact-confirmation",
+          recipientEmail: form.email,
+          idempotencyKey: `contact-confirm-${id}`,
+          templateData: { name: form.name, message: form.message },
+        },
+      });
+
+      const [notifyRes, confirmRes] = await Promise.all([notify, confirm]);
+      if (notifyRes.error) throw notifyRes.error;
+      // Confirmation failure shouldn't block; just log
+      if (confirmRes.error) console.warn("Confirmation email failed", confirmRes.error);
+
+      toast({
+        title: "Message sent!",
+        description: "Thanks for reaching out — we'll get back to you within 24 hours.",
+      });
+      setForm({ name: "", email: "", phoneCode: "", phone: "", country: "", category: "", subject: "", message: "" });
+    } catch (err: any) {
+      console.error("Contact form error", err);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or email us directly at info@setlix.pt.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <section id="contact" className="py-24 bg-section-alt">
@@ -110,13 +177,15 @@ const Contact = () => {
           Ready to start your journey to Portugal? Let's discuss how we can help.
         </p>
 
-        <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Full Name *</label>
               <input
                 type="text"
                 required
+                value={form.name}
+                onChange={update("name")}
                 className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Full Name"
               />
@@ -126,6 +195,8 @@ const Contact = () => {
               <input
                 type="email"
                 required
+                value={form.email}
+                onChange={update("email")}
                 className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Email Address"
               />
@@ -136,7 +207,12 @@ const Contact = () => {
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Phone Number *</label>
               <div className="flex gap-2">
-                <select required className="w-32 shrink-0 rounded-lg border border-input bg-background px-2 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                <select
+                  required
+                  value={form.phoneCode}
+                  onChange={update("phoneCode")}
+                  className="w-32 shrink-0 rounded-lg border border-input bg-background px-2 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
                   <option value="">Code</option>
                   {countryCodes.map((c) => (
                     <option key={`${c.country}-${c.code}`} value={c.code}>{c.flag} {c.code}</option>
@@ -145,6 +221,8 @@ const Contact = () => {
                 <input
                   type="tel"
                   required
+                  value={form.phone}
+                  onChange={update("phone")}
                   className="flex-1 rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="Phone Number"
                 />
@@ -152,7 +230,12 @@ const Contact = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Country *</label>
-              <select className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+              <select
+                required
+                value={form.country}
+                onChange={update("country")}
+                className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
                 <option value="">Select your country</option>
                 {countries.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -164,7 +247,12 @@ const Contact = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Category *</label>
-              <select className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+              <select
+                required
+                value={form.category}
+                onChange={update("category")}
+                className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
                 <option value="">Select your category</option>
                 {categories.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -175,6 +263,8 @@ const Contact = () => {
               <label className="block text-sm font-medium text-foreground mb-1">Subject</label>
               <input
                 type="text"
+                value={form.subject}
+                onChange={update("subject")}
                 className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Select a subject"
               />
@@ -187,18 +277,20 @@ const Contact = () => {
               required
               maxLength={500}
               rows={5}
-              onChange={(e) => setCharCount(e.target.value.length)}
+              value={form.message}
+              onChange={update("message")}
               className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               placeholder="Message"
             />
-            <p className="text-xs text-muted-foreground text-right">{charCount}/500</p>
+            <p className="text-xs text-muted-foreground text-right">{form.message.length}/500</p>
           </div>
 
           <button
             type="submit"
-            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            disabled={submitting}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Send Message
+            {submitting ? "Sending…" : "Send Message"}
           </button>
 
           <p className="text-center text-muted-foreground text-sm">
