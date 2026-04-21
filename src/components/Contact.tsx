@@ -103,6 +103,7 @@ const Contact = () => {
   const [form, setForm] = useState({
     name: "", email: "", phoneCode: "", phone: "", country: "", category: "", subject: "", message: "",
   });
+  const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -111,6 +112,14 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+    if (!consent) {
+      toast({
+        title: "Please confirm consent",
+        description: "We need your consent to process your enquiry under GDPR.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSubmitting(true);
 
     const id = crypto.randomUUID();
@@ -155,6 +164,7 @@ const Contact = () => {
         description: "Thanks for reaching out — we'll get back to you within 24 hours.",
       });
       setForm({ name: "", email: "", phoneCode: "", phone: "", country: "", category: "", subject: "", message: "" });
+      setConsent(false);
     } catch (err: any) {
       console.error("Contact form error", err);
       toast({
@@ -285,9 +295,28 @@ const Contact = () => {
             <p className="text-xs text-muted-foreground text-right">{form.message.length}/500</p>
           </div>
 
+          <div className="flex items-start gap-3 rounded-lg border border-input bg-background p-4">
+            <input
+              id="gdpr-consent"
+              type="checkbox"
+              required
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-1 h-4 w-4 shrink-0 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+            />
+            <label htmlFor="gdpr-consent" className="text-xs text-muted-foreground leading-relaxed">
+              I consent to Setlix processing the personal data I provide above (name,
+              email, phone, country, message) to respond to my enquiry, in accordance
+              with the{" "}
+              <a href="/privacy-policy" className="text-primary underline">Privacy Policy</a>.
+              I understand I can withdraw my consent at any time by emailing{" "}
+              <a href="mailto:info@setlix.pt" className="text-primary underline">info@setlix.pt</a>.
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !consent}
             className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {submitting ? "Sending…" : "Send Message"}
