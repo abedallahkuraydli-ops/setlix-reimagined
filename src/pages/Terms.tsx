@@ -13,8 +13,9 @@ const Terms = () => {
           <div className="prose prose-sm max-w-none text-foreground/90 space-y-6">
             <h2 className="text-xl font-semibold text-foreground">1. About us</h2>
             <p>
-              This website (<strong>setlix.pt</strong>) is operated by Setlix, based in
-              Lisbon, Portugal. Contact:{" "}
+              This website (<strong>www.setlix.pt</strong>) is operated by Inconstant Scape
+              Unipessoal Lda, a Portuguese registered company, based in Lisbon, Portugal.
+              Contact:{" "}
               <a href="mailto:info@setlix.pt" className="text-primary underline">info@setlix.pt</a>.
             </p>
 
