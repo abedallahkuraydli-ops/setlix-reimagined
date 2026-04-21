@@ -2,22 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TZDJHGQB15"></script>
+    <!-- Google Analytics is loaded conditionally after user consent (see src/lib/analytics.ts) -->
     <script>
+      // Set default consent state to 'denied' BEFORE GA loads (GDPR/ePrivacy compliant).
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied',
+        'functionality_storage': 'granted',
+        'security_storage': 'granted',
+        'wait_for_update': 500
+      });
       gtag('js', new Date());
-      gtag('config', 'G-TZDJHGQB15');
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
     <title>Setlix</title>
     <meta name="description" content="Launch &amp; Thrive in Portugal with Setlix.pt">
-    <meta name="author" content="Lovable" />
+    <meta name="author" content="Setlix" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    
-    
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/5GaQXezLSTckY4bwG7tRGMlO9Q23/social-images/social-1776429962205-SETLIX_(1).webp">
 
