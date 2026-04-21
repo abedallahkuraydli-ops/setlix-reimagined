@@ -86,11 +86,16 @@ const PrivacyPolicy = () => {
               We will respond within 30 days.
             </p>
 
-            <h2 className="text-xl font-semibold text-foreground">9. Cookies</h2>
+            <h2 className="text-xl font-semibold text-foreground">9. Cookies & Analytics</h2>
             <p>
-              Our website may use essential cookies to ensure proper functionality. We do not use tracking 
-              or advertising cookies without your explicit consent. You can manage cookie preferences through 
-              your browser settings.
+              We use strictly necessary cookies/storage to remember your cookie consent choice.
+              With your explicit consent, we also use <strong>Google Analytics 4</strong>
+              (provider: Google Ireland Limited) with IP anonymisation to understand how
+              visitors use our site. Analytics cookies are not set unless you accept them
+              in our consent banner. You can review or change your choice at any time on
+              our <a href="/cookie-policy" className="text-primary underline">Cookie Policy</a> page.
+              Some Google Analytics data may be transferred outside the EEA under the
+              EU-US Data Privacy Framework and Standard Contractual Clauses.
             </p>
 
             <h2 className="text-xl font-semibold text-foreground">10. Security</h2>
