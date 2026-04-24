@@ -97,21 +97,7 @@ const Payments = () => {
     }
   };
 
-  // Handle return from Stripe Embedded Checkout
-  useEffect(() => {
-    const sessionId = params.get("session_id");
-    if (sessionId) {
-      toast({ title: "Payment received", description: "Thanks! Your invoice will be issued shortly." });
-      setParams({}, { replace: true });
-      setCheckoutOpen(false);
-      setTimeout(fetchInvoices, 2500);
-    }
-  }, [params, setParams, toast]);
-
-  const handlePay = (invoiceId: string) => {
-    setActiveInvoiceId(invoiceId);
-    setCheckoutOpen(true);
-  };
+  // Online payments are not enabled — clients pay via bank transfer only.
 
   const pending = invoices.filter((i) => i.status === "pending" || i.status === "failed");
   const history = invoices.filter((i) => i.status === "paid" || i.status === "refunded");
