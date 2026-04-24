@@ -184,6 +184,7 @@ const Documents = () => {
     }
     setUploadingRequestId(requestId);
     const filePath = `${user.id}/requests/${Date.now()}_${file.name}`;
+    const sha256 = await computeSha256(file);
     const { error: storageError } = await supabase.storage
       .from("documents")
       .upload(filePath, file, { contentType: file.type });
@@ -208,6 +209,7 @@ const Documents = () => {
         document_request_id: requestId,
         file_path: filePath,
         file_name: file.name,
+        metadata: { size: file.size, mime: file.type, sha256 },
       });
       fetchDocs();
     }
