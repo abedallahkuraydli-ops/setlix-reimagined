@@ -520,6 +520,7 @@ export type Database = {
           created_at: string
           document_id: string | null
           document_request_id: string | null
+          download_purpose: string | null
           file_name: string | null
           file_path: string | null
           id: string
@@ -535,6 +536,7 @@ export type Database = {
           created_at?: string
           document_id?: string | null
           document_request_id?: string | null
+          download_purpose?: string | null
           file_name?: string | null
           file_path?: string | null
           id?: string
@@ -550,6 +552,7 @@ export type Database = {
           created_at?: string
           document_id?: string | null
           document_request_id?: string | null
+          download_purpose?: string | null
           file_name?: string | null
           file_path?: string | null
           id?: string
@@ -1520,19 +1523,34 @@ export type Database = {
       is_admin_or_super: { Args: { _user_id: string }; Returns: boolean }
       is_setlix_admin: { Args: { _user_id: string }; Returns: boolean }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
-      log_document_action: {
-        Args: {
-          _action: string
-          _document_id?: string
-          _document_request_id?: string
-          _file_name?: string
-          _file_path?: string
-          _ip_address?: string
-          _metadata?: Json
-          _user_agent?: string
-        }
-        Returns: string
-      }
+      log_document_action:
+        | {
+            Args: {
+              _action: string
+              _document_id?: string
+              _document_request_id?: string
+              _file_name?: string
+              _file_path?: string
+              _ip_address?: string
+              _metadata?: Json
+              _user_agent?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _action: string
+              _document_id?: string
+              _document_request_id?: string
+              _download_purpose?: string
+              _file_name?: string
+              _file_path?: string
+              _ip_address?: string
+              _metadata?: Json
+              _user_agent?: string
+            }
+            Returns: string
+          }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1550,6 +1568,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      retention_for_category: { Args: { _category: string }; Returns: string }
     }
     Enums: {
       app_role: "superadmin" | "admin" | "client"
