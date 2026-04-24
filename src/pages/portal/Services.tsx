@@ -49,14 +49,10 @@ const fmt = (cents: number, ccy: string) =>
 
 const Services = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const { isSigned, loading: contractLoading } = useContractStatus();
   const [services, setServices] = useState<ClientServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [payingId, setPayingId] = useState<string | null>(null);
-  const [activeInvoiceId, setActiveInvoiceId] = useState<string | null>(null);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -108,23 +104,6 @@ const Services = () => {
     return { currency, total, count: payable.length };
   }, [payable]);
 
-  const startCheckout = async (clientServiceIds: string[], buttonKey: string) => {
-    setPayingId(buttonKey);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-service-invoice", {
-        body: { client_service_ids: clientServiceIds },
-      });
-      if (error || !data?.invoice_id) {
-        const msg = (error as any)?.message || data?.error || "Could not start checkout";
-        toast({ title: "Payment error", description: msg, variant: "destructive" });
-        return;
-      }
-      setActiveInvoiceId(data.invoice_id);
-      setCheckoutOpen(true);
-    } finally {
-      setPayingId(null);
-    }
-  };
 
   return (
     <div className="animate-in fade-in duration-500">
