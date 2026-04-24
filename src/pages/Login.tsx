@@ -370,7 +370,7 @@ const Login = () => {
               </div>
             )}
 
-            {isLogin && (
+            {isLogin && !setupMode && (
               <button
                 type="button"
                 onClick={handleForgotPassword}
@@ -380,9 +380,30 @@ const Login = () => {
               </button>
             )}
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading || (!isLogin && (!passwordValid || !acceptedPolicy))}>
+            {setupMode && (
+              <button
+                type="button"
+                onClick={() => setSetupMode(false)}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                ← Back to login
+              </button>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={
+                loading ||
+                (setupMode && !passwordValid) ||
+                (!isLogin && !setupMode && (!passwordValid || !acceptedPolicy))
+              }
+            >
               {loading ? (
                 <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
+              ) : setupMode ? (
+                "Create Superadmin Account"
               ) : isLogin ? (
                 "Log In"
               ) : (
