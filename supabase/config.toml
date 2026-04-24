@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.purge-expired-documents]
 verify_jwt = false
+
+[functions.setup-superadmin]
+verify_jwt = false
