@@ -325,7 +325,7 @@ const Login = () => {
               )}
             </div>
 
-            {!isLogin && (
+            {(!isLogin || setupMode) && (
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
                 <div className="relative">
