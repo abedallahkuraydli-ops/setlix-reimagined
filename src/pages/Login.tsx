@@ -200,31 +200,60 @@ const Login = () => {
         </a>
 
         <div className="bg-background rounded-xl shadow-2xl p-8">
-          <div className="flex mb-8 bg-muted rounded-lg p-1">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
-                isLogin
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Log In
-            </button>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
-                !isLogin
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
+          {!setupMode && (
+            <div className="flex mb-8 bg-muted rounded-lg p-1">
+              <button
+                onClick={() => setIsLogin(true)}
+                className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
+                  isLogin
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => setIsLogin(false)}
+                className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
+                  !isLogin
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
 
-          <form onSubmit={isLogin ? handleLogin : handleSignup} className="space-y-4">
-            {!isLogin && (
+          {setupMode && (
+            <div className="mb-6 rounded-md border border-border bg-muted/50 p-3">
+              <p className="text-sm font-semibold text-foreground">Set up superadmin account</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Choose a password for {SUPERADMIN_EMAIL}. No email verification required.
+              </p>
+            </div>
+          )}
+
+          {!setupMode && isLogin && superadminNeedsSetup && (
+            <div className="mb-4 rounded-md border border-border bg-muted/50 p-3 flex items-center justify-between gap-3">
+              <p className="text-xs text-muted-foreground">
+                Superadmin account not set up yet.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSetupMode(true)}
+                className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+              >
+                Set up now
+              </button>
+            </div>
+          )}
+
+          <form
+            onSubmit={setupMode ? handleSuperadminSetup : isLogin ? handleLogin : handleSignup}
+            className="space-y-4"
+          >
+            {!isLogin && !setupMode && (
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
                 <Input
