@@ -485,7 +485,7 @@ const AdminClientDetail = () => {
       />
 
       {/* Invoices & Payments */}
-      <AdminInvoicesSection clientId={profile.id} />
+      <AdminInvoicesSection clientId={profile.id} clientUserId={profile.user_id} />
 
       <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
