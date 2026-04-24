@@ -299,7 +299,7 @@ const AdminClientDetail = () => {
     fetchAll();
   };
 
-  const handleDownloadDoc = async (doc: DocRequest) => {
+  const handleDownloadDoc = async (doc: DocRequest, purpose: string) => {
     if (!doc.uploaded_file_url) return;
     const { data, error } = await supabase.storage.from("documents").createSignedUrl(doc.uploaded_file_url, 60);
     if (error || !data?.signedUrl) {
@@ -315,12 +315,13 @@ const AdminClientDetail = () => {
         document_request_id: doc.id,
         file_path: doc.uploaded_file_url,
         file_name: doc.document_name,
+        download_purpose: purpose,
       });
     }
     window.open(data.signedUrl, "_blank");
   };
 
-  const handleDownloadClientDoc = async (doc: ClientDoc) => {
+  const handleDownloadClientDoc = async (doc: ClientDoc, purpose: string) => {
     const { data, error } = await supabase.storage.from("documents").createSignedUrl(doc.file_path, 60);
     if (error || !data?.signedUrl) {
       toast({ title: "Download failed", variant: "destructive" });
@@ -335,6 +336,7 @@ const AdminClientDetail = () => {
         document_id: doc.id,
         file_path: doc.file_path,
         file_name: doc.file_name,
+        download_purpose: purpose,
       });
     }
     const a = document.createElement("a");
