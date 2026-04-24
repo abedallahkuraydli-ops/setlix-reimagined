@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { CreditCard, Loader2, ExternalLink, CheckCircle2, AlertCircle, Building2, Copy, Info } from "lucide-react";
+import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Building2, Copy, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { EmbeddedCheckoutDialog } from "@/components/payments/EmbeddedCheckoutDialog";
 
 interface Invoice {
   id: string;
