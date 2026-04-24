@@ -11,8 +11,18 @@ import {
   CheckCircle2,
   AlertCircle,
   Upload,
+  Wallet,
+  CalendarClock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  applyDueLateFees,
+  computeBilling,
+  formatMoney,
+  loadBillingForClient,
+  type BillingRow,
+  type BillingSummary,
+} from "@/lib/billing";
 
 const ACTIVE_STATUSES = ["requested", "in_review", "in_progress"] as const;
 
