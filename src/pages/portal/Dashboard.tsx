@@ -11,8 +11,18 @@ import {
   CheckCircle2,
   AlertCircle,
   Upload,
+  Wallet,
+  CalendarClock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  applyDueLateFees,
+  computeBilling,
+  formatMoney,
+  loadBillingForClient,
+  type BillingRow,
+  type BillingSummary,
+} from "@/lib/billing";
 
 const ACTIVE_STATUSES = ["requested", "in_review", "in_progress"] as const;
 
@@ -34,6 +44,8 @@ const Dashboard = () => {
   const [completedCount, setCompletedCount] = useState(0);
   const [documentsCount, setDocumentsCount] = useState(0);
   const [pendingRequests, setPendingRequests] = useState<DocRequest[]>([]);
+  const [billingSummary, setBillingSummary] = useState<BillingSummary | null>(null);
+  const [billingNextDue, setBillingNextDue] = useState<string | null>(null);
 
   // Load profile
   useEffect(() => {
@@ -51,13 +63,13 @@ const Dashboard = () => {
       });
   }, [user]);
 
-  // Load counts + pending document requests
+  // Load counts + pending document requests + billing
   useEffect(() => {
     if (!user || !profileId) return;
     let cancelled = false;
 
     const load = async () => {
-      const [services, docs, requests] = await Promise.all([
+      const [services, docs, requests, billingData] = await Promise.all([
         supabase
           .from("client_services")
           .select("status")
@@ -72,6 +84,7 @@ const Dashboard = () => {
           .eq("client_id", profileId)
           .is("uploaded_at", null)
           .order("created_at", { ascending: false }),
+        loadBillingForClient(profileId),
       ]);
 
       if (cancelled) return;
@@ -81,6 +94,17 @@ const Dashboard = () => {
       setCompletedCount(statuses.filter((s) => s === "completed").length);
       setDocumentsCount(docs.count ?? 0);
       setPendingRequests((requests.data ?? []) as DocRequest[]);
+
+      // Auto-apply elapsed late-fee periods (no-op for clients who lack RLS update;
+      // RLS prevents it for clients, so this only succeeds for admins viewing this UI.
+      // The compute still reflects whatever is stored.)
+      let billing: BillingRow | null = billingData.billing;
+      if (billing) {
+        const updated = await applyDueLateFees(profileId, billing).catch(() => null);
+        if (updated) billing = updated;
+      }
+      setBillingNextDue(billing?.next_payment_due_at ?? null);
+      setBillingSummary(computeBilling(billingData.services, billing, billingData.payments));
     };
 
     load();
@@ -91,6 +115,8 @@ const Dashboard = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${profileId}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "documents", filter: `user_id=eq.${user.id}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "document_requests", filter: `client_id=eq.${profileId}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_billing", filter: `client_id=eq.${profileId}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_payments", filter: `client_id=eq.${profileId}` }, load)
       .subscribe();
 
     return () => {
@@ -187,6 +213,96 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Payment reminder banner (3/2/1/0 days before due, or overdue) */}
+      {billingSummary && billingSummary.remainingCents > 0 && billingSummary.daysUntilDue !== null && billingSummary.daysUntilDue <= 3 && (
+        <div className={`rounded-xl border p-4 flex items-start gap-3 ${
+          billingSummary.isOverdue
+            ? "border-destructive/40 bg-destructive/10"
+            : billingSummary.daysUntilDue === 0
+              ? "border-amber-400/60 bg-amber-50 dark:bg-amber-950/20"
+              : "border-primary/30 bg-primary/5"
+        }`}>
+          <CalendarClock className={`h-5 w-5 mt-0.5 shrink-0 ${billingSummary.isOverdue ? "text-destructive" : "text-primary"}`} />
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-foreground">
+              {billingSummary.isOverdue
+                ? `Payment overdue by ${Math.abs(billingSummary.daysUntilDue)} day${Math.abs(billingSummary.daysUntilDue) === 1 ? "" : "s"}`
+                : billingSummary.daysUntilDue === 0
+                  ? "Payment is due today"
+                  : `Payment due in ${billingSummary.daysUntilDue} day${billingSummary.daysUntilDue === 1 ? "" : "s"}`}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {formatMoney(billingSummary.remainingCents, billingSummary.currency)} remaining
+              {billingNextDue ? ` • Due ${new Date(billingNextDue).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}
+              {billingSummary.lateFeeCents > 0 ? ` • Late fee applied: ${formatMoney(billingSummary.lateFeeCents, billingSummary.currency)}` : ""}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Billing summary card */}
+      {billingSummary && billingSummary.grandTotalCents > 0 && (
+        <div className="rounded-xl border border-border bg-card p-5 md:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Wallet className="h-5 w-5 text-primary" />
+            <h2 className="text-base font-semibold text-foreground">Billing summary</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Total price</p>
+              {billingSummary.hasDiscount ? (
+                <div className="mt-0.5">
+                  <p className="text-xs text-muted-foreground line-through">
+                    {formatMoney(billingSummary.servicesTotalCents, billingSummary.currency)}
+                  </p>
+                  <p className="text-lg font-bold text-emerald-600">
+                    {formatMoney(billingSummary.baseTotalCents, billingSummary.currency)}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-lg font-bold text-foreground mt-0.5">
+                  {formatMoney(billingSummary.baseTotalCents, billingSummary.currency)}
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Paid</p>
+              <p className="text-lg font-bold text-foreground mt-0.5">{formatMoney(billingSummary.paidCents, billingSummary.currency)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Remaining</p>
+              <p className="text-lg font-bold text-primary mt-0.5">{formatMoney(billingSummary.remainingCents, billingSummary.currency)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Next payment</p>
+              {billingNextDue ? (
+                <>
+                  <p className="text-sm font-semibold text-foreground mt-0.5">
+                    {new Date(billingNextDue).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                  {billingSummary.daysUntilDue !== null && (
+                    <p className={`text-xs mt-0.5 font-medium ${billingSummary.isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
+                      {billingSummary.isOverdue
+                        ? `Overdue by ${Math.abs(billingSummary.daysUntilDue)}d`
+                        : billingSummary.daysUntilDue === 0
+                          ? "Due today"
+                          : `${billingSummary.daysUntilDue} day${billingSummary.daysUntilDue === 1 ? "" : "s"} left`}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground mt-0.5">Not scheduled</p>
+              )}
+            </div>
+          </div>
+          {billingSummary.lateFeeCents > 0 && (
+            <p className="text-xs text-destructive mt-3">
+              Includes late payment fee of {formatMoney(billingSummary.lateFeeCents, billingSummary.currency)}.
+            </p>
+          )}
         </div>
       )}
 
