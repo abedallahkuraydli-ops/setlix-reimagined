@@ -84,8 +84,10 @@ const Login = () => {
       },
     });
     if (!error && data.user) {
-      await recordConsent({
-        userId: data.user.id,
+      // The new user has no session yet (email verification required), so
+      // RLS would block consent_log inserts. Stage locally and flush after
+      // first successful sign-in.
+      stagePendingConsent({
         consentType: "privacy_policy",
         policyVersion: PRIVACY_POLICY_VERSION,
         granted: true,
