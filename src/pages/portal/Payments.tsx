@@ -38,11 +38,8 @@ const FALLBACK_BANK: BankDetails = {
 const Payments = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [params, setParams] = useSearchParams();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeInvoiceId, setActiveInvoiceId] = useState<string | null>(null);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [clientFullName, setClientFullName] = useState<string>("");
   const [bank, setBank] = useState<BankDetails>(FALLBACK_BANK);
 
