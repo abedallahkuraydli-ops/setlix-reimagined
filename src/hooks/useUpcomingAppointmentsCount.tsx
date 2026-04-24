@@ -1,29 +1,20 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
+import { useProfile } from "./useProfile";
 
 export function useUpcomingAppointmentsCount() {
-  const { user } = useAuth();
+  const { profile } = useProfile();
+  const profileId = profile?.id ?? null;
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
-
-    let profileId: string | null = null;
+    if (!profileId) return;
 
     const load = async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!profile) return;
-      profileId = profile.id;
-
       const { count: c } = await supabase
         .from("appointments")
         .select("id", { count: "exact", head: true })
-        .eq("client_id", profile.id)
+        .eq("client_id", profileId)
         .eq("status", "confirmed")
         .gte("slot_start", new Date().toISOString());
       setCount(c ?? 0);
@@ -35,17 +26,15 @@ export function useUpcomingAppointmentsCount() {
       .channel("upcoming-appts")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "appointments" },
-        () => {
-          if (profileId) load();
-        },
+        { event: "*", schema: "public", table: "appointments", filter: `client_id=eq.${profileId}` },
+        () => load(),
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [profileId]);
 
   return count;
 }

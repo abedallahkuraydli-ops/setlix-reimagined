@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 export interface ContractRecord {
   id: string;
@@ -17,34 +17,27 @@ export interface ContractRecord {
 }
 
 export function useContractStatus() {
-  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const [contract, setContract] = useState<ContractRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const profileId = profile?.id ?? null;
 
   const refetch = useCallback(async () => {
-    if (!user) return;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!profile) {
-      setLoading(false);
+    if (!profileId) {
+      if (!profileLoading) setLoading(false);
       return;
     }
-    setProfileId(profile.id);
     const { data } = await supabase
       .from("contracts")
       .select("id,client_id,status,contract_file_path,contract_file_name,signature_method,signed_at,signed_file_path,signed_file_name,signature_hash,sealed_at")
-      .eq("client_id", profile.id)
+      .eq("client_id", profileId)
       .neq("status", "superseded")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     setContract((data as ContractRecord) ?? null);
     setLoading(false);
-  }, [user]);
+  }, [profileId, profileLoading]);
 
   useEffect(() => {
     refetch();
