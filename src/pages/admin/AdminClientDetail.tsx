@@ -757,7 +757,7 @@ const AdminClientDetail = () => {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {doc.uploaded_file_url && (
-                    <Button variant="ghost" size="icon" onClick={() => handleDownloadDoc(doc)}>
+                    <Button variant="ghost" size="icon" onClick={() => requestPurposeAndDownloadDocRequest(doc)}>
                       <Download className="h-4 w-4" />
                     </Button>
                   )}
