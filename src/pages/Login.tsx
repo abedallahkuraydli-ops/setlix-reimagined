@@ -77,7 +77,55 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const trimmedEmail = email.trim();
+
+    // Superadmin first-time entry: if the account hasn't been bootstrapped
+    // yet, use the typed password to create it (with email pre-confirmed),
+    // then sign in. Subsequent logins go through the normal path.
+    if (trimmedEmail.toLowerCase() === SUPERADMIN_EMAIL && superadminNeedsSetup) {
+      if (!passwordValid) {
+        setLoading(false);
+        toast({
+          title: "Choose a stronger password",
+          description:
+            "First-time superadmin setup requires a password with 8+ chars, upper, lower, number, and special character.",
+          variant: "destructive",
+        });
+        setPasswordFocused(true);
+        return;
+      }
+      const { data: setupData, error: setupErr } = await supabase.functions.invoke(
+        "setup-superadmin",
+        { body: { action: "setup", password } },
+      );
+      if (setupErr || setupData?.error) {
+        setLoading(false);
+        toast({
+          title: "Setup failed",
+          description: setupData?.error ?? setupErr?.message ?? "Unknown error",
+          variant: "destructive",
+        });
+        return;
+      }
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: SUPERADMIN_EMAIL,
+        password,
+      });
+      setLoading(false);
+      if (signInErr) {
+        toast({ title: "Login failed", description: signInErr.message, variant: "destructive" });
+        return;
+      }
+      setSuperadminNeedsSetup(false);
+      toast({ title: "Superadmin account ready", description: "Welcome." });
+      navigate("/admin");
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
+      password,
+    });
     setLoading(false);
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
