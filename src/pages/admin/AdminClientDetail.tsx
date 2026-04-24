@@ -359,6 +359,7 @@ const AdminClientDetail = () => {
     }
     setUploadingIssued(true);
     const filePath = `${profile.user_id}/issued/${Date.now()}_${file.name}`;
+    const sha256 = await computeSha256(file);
     const { error: storageError } = await supabase.storage
       .from("documents")
       .upload(filePath, file, { contentType: file.type });
@@ -379,6 +380,7 @@ const AdminClientDetail = () => {
       category: "setlix_issued",
       mime_type: file.type,
       uploaded_by_admin_id: adminProfile?.id ?? null,
+      sha256_hash: sha256,
     }).select("id").single();
     if (dbError) {
       toast({ title: "Error saving record", description: dbError.message, variant: "destructive" });
@@ -392,7 +394,7 @@ const AdminClientDetail = () => {
         document_id: insertedDoc?.id ?? null,
         file_path: filePath,
         file_name: file.name,
-        metadata: { size: file.size, mime: file.type },
+        metadata: { size: file.size, mime: file.type, sha256 },
       });
       fetchAll();
     }
