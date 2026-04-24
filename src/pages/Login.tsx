@@ -77,7 +77,55 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const trimmedEmail = email.trim();
+
+    // Superadmin first-time entry: if the account hasn't been bootstrapped
+    // yet, use the typed password to create it (with email pre-confirmed),
+    // then sign in. Subsequent logins go through the normal path.
+    if (trimmedEmail.toLowerCase() === SUPERADMIN_EMAIL && superadminNeedsSetup) {
+      if (!passwordValid) {
+        setLoading(false);
+        toast({
+          title: "Choose a stronger password",
+          description:
+            "First-time superadmin setup requires a password with 8+ chars, upper, lower, number, and special character.",
+          variant: "destructive",
+        });
+        setPasswordFocused(true);
+        return;
+      }
+      const { data: setupData, error: setupErr } = await supabase.functions.invoke(
+        "setup-superadmin",
+        { body: { action: "setup", password } },
+      );
+      if (setupErr || setupData?.error) {
+        setLoading(false);
+        toast({
+          title: "Setup failed",
+          description: setupData?.error ?? setupErr?.message ?? "Unknown error",
+          variant: "destructive",
+        });
+        return;
+      }
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: SUPERADMIN_EMAIL,
+        password,
+      });
+      setLoading(false);
+      if (signInErr) {
+        toast({ title: "Login failed", description: signInErr.message, variant: "destructive" });
+        return;
+      }
+      setSuperadminNeedsSetup(false);
+      toast({ title: "Superadmin account ready", description: "Welcome." });
+      navigate("/admin");
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
+      password,
+    });
     setLoading(false);
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
@@ -235,17 +283,15 @@ const Login = () => {
           )}
 
           {!setupMode && isLogin && superadminNeedsSetup && (
-            <div className="mb-4 rounded-md border border-border bg-muted/50 p-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground">
-                Superadmin account not set up yet.
+            <div className="mb-4 rounded-md border border-border bg-muted/50 p-3">
+              <p className="text-xs font-semibold text-foreground">
+                First-time superadmin entry
               </p>
-              <button
-                type="button"
-                onClick={() => setSetupMode(true)}
-                className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
-              >
-                Set up now
-              </button>
+              <p className="text-xs text-muted-foreground mt-1">
+                Type the password you want to use for {SUPERADMIN_EMAIL} below and press
+                Log In. Your account will be created automatically — no email
+                verification required.
+              </p>
             </div>
           )}
 
@@ -306,7 +352,7 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {(!isLogin || setupMode) && (passwordFocused || password.length > 0) && (
+              {(!isLogin || setupMode || (isLogin && superadminNeedsSetup)) && (passwordFocused || password.length > 0) && (
                 <div className="rounded-md border border-border bg-muted/50 p-3 space-y-1.5 animate-in fade-in slide-in-from-top-1">
                   <p className="text-xs font-medium text-foreground mb-2">Password must contain:</p>
                   {passwordChecks.map((check) => (
