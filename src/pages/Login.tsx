@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ const passwordRules = [
   { id: "special", label: "One special character", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ];
 
+const SUPERADMIN_EMAIL = "info@setlix.pt";
+
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -29,12 +31,36 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+  const [superadminNeedsSetup, setSuperadminNeedsSetup] = useState(false);
+  const [setupMode, setSetupMode] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, roleLoading, isAdmin } = useRole();
 
   const passwordChecks = passwordRules.map((r) => ({ ...r, valid: r.test(password) }));
   const passwordValid = passwordChecks.every((c) => c.valid);
+  const isSuperadminEmail = email.trim().toLowerCase() === SUPERADMIN_EMAIL;
+
+  // When the superadmin email is typed, check if the account still needs
+  // first-time setup (no password yet). If so, surface the setup CTA.
+  useEffect(() => {
+    let cancelled = false;
+    if (!isSuperadminEmail) {
+      setSuperadminNeedsSetup(false);
+      setSetupMode(false);
+      return;
+    }
+    (async () => {
+      const { data, error } = await supabase.functions.invoke("setup-superadmin", {
+        body: { action: "status" },
+      });
+      if (cancelled || error) return;
+      setSuperadminNeedsSetup(Boolean(data?.needs_setup));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSuperadminEmail]);
 
   if (roleLoading) {
     return (
@@ -58,6 +84,44 @@ const Login = () => {
     } else {
       navigate("/portal");
     }
+  };
+
+  const handleSuperadminSetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isSuperadminEmail) return;
+    if (password !== confirmPassword) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    if (!passwordValid) {
+      toast({ title: "Password doesn't meet requirements", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke("setup-superadmin", {
+      body: { action: "setup", password },
+    });
+    if (error || data?.error) {
+      setLoading(false);
+      toast({
+        title: "Setup failed",
+        description: data?.error ?? error?.message ?? "Unknown error",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Account is created with email already confirmed — log in immediately.
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: SUPERADMIN_EMAIL,
+      password,
+    });
+    setLoading(false);
+    if (signInErr) {
+      toast({ title: "Login failed", description: signInErr.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Superadmin account ready", description: "Welcome." });
+    navigate("/admin");
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -136,31 +200,60 @@ const Login = () => {
         </a>
 
         <div className="bg-background rounded-xl shadow-2xl p-8">
-          <div className="flex mb-8 bg-muted rounded-lg p-1">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
-                isLogin
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Log In
-            </button>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
-                !isLogin
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
+          {!setupMode && (
+            <div className="flex mb-8 bg-muted rounded-lg p-1">
+              <button
+                onClick={() => setIsLogin(true)}
+                className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
+                  isLogin
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => setIsLogin(false)}
+                className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
+                  !isLogin
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
 
-          <form onSubmit={isLogin ? handleLogin : handleSignup} className="space-y-4">
-            {!isLogin && (
+          {setupMode && (
+            <div className="mb-6 rounded-md border border-border bg-muted/50 p-3">
+              <p className="text-sm font-semibold text-foreground">Set up superadmin account</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Choose a password for {SUPERADMIN_EMAIL}. No email verification required.
+              </p>
+            </div>
+          )}
+
+          {!setupMode && isLogin && superadminNeedsSetup && (
+            <div className="mb-4 rounded-md border border-border bg-muted/50 p-3 flex items-center justify-between gap-3">
+              <p className="text-xs text-muted-foreground">
+                Superadmin account not set up yet.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSetupMode(true)}
+                className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+              >
+                Set up now
+              </button>
+            </div>
+          )}
+
+          <form
+            onSubmit={setupMode ? handleSuperadminSetup : isLogin ? handleLogin : handleSignup}
+            className="space-y-4"
+          >
+            {!isLogin && !setupMode && (
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
                 <Input
@@ -213,7 +306,7 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {!isLogin && (passwordFocused || password.length > 0) && (
+              {(!isLogin || setupMode) && (passwordFocused || password.length > 0) && (
                 <div className="rounded-md border border-border bg-muted/50 p-3 space-y-1.5 animate-in fade-in slide-in-from-top-1">
                   <p className="text-xs font-medium text-foreground mb-2">Password must contain:</p>
                   {passwordChecks.map((check) => (
@@ -232,7 +325,7 @@ const Login = () => {
               )}
             </div>
 
-            {!isLogin && (
+            {(!isLogin || setupMode) && (
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
                 <div className="relative">
@@ -259,7 +352,7 @@ const Login = () => {
               </div>
             )}
 
-            {!isLogin && (
+            {!isLogin && !setupMode && (
               <div className="flex items-start gap-2 pt-1">
                 <Checkbox
                   id="accept-policy"
@@ -277,7 +370,7 @@ const Login = () => {
               </div>
             )}
 
-            {isLogin && (
+            {isLogin && !setupMode && (
               <button
                 type="button"
                 onClick={handleForgotPassword}
@@ -287,9 +380,30 @@ const Login = () => {
               </button>
             )}
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading || (!isLogin && (!passwordValid || !acceptedPolicy))}>
+            {setupMode && (
+              <button
+                type="button"
+                onClick={() => setSetupMode(false)}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                ← Back to login
+              </button>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={
+                loading ||
+                (setupMode && !passwordValid) ||
+                (!isLogin && !setupMode && (!passwordValid || !acceptedPolicy))
+              }
+            >
               {loading ? (
                 <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
+              ) : setupMode ? (
+                "Create Superadmin Account"
               ) : isLogin ? (
                 "Log In"
               ) : (
