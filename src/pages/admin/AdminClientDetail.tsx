@@ -879,6 +879,18 @@ const AdminClientDetail = () => {
         onOpenChange={setUnauthDialogOpen}
         documentName={unauthDocName}
       />
+      <AdminDownloadPurposeDialog
+        open={purposeDialogOpen}
+        onOpenChange={setPurposeDialogOpen}
+        documentName={
+          pendingDownload?.kind === "client_doc"
+            ? pendingDownload.doc.file_name
+            : pendingDownload?.kind === "doc_request"
+              ? pendingDownload.doc.document_name
+              : null
+        }
+        onConfirm={executePendingDownload}
+      />
     </div>
   );
 };
