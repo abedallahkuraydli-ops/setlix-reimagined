@@ -124,12 +124,8 @@ const Services = () => {
                 <p className="text-xs text-muted-foreground">Total outstanding ({totals.count})</p>
                 <p className="text-lg font-semibold text-foreground">{fmt(totals.total, totals.currency)}</p>
               </div>
-              <Button
-                onClick={() => startCheckout(payable.map((s) => s.id), "all")}
-                disabled={payingId !== null}
-              >
-                {payingId === "all" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CreditCard className="h-4 w-4 mr-1" />}
-                Pay all
+              <Button variant="outline" onClick={() => navigate("/portal/payments")}>
+                <Building2 className="h-4 w-4 mr-1" /> Bank transfer details
               </Button>
             </div>
           )}
@@ -197,18 +193,9 @@ const Services = () => {
                 </div>
                 {canPay && (
                   <div className="flex justify-end pt-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => startCheckout([s.id], s.id)}
-                      disabled={payingId !== null}
-                    >
-                      {payingId === s.id ? (
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      ) : (
-                        <CreditCard className="h-4 w-4 mr-1" />
-                      )}
-                      Pay this service
+                    <Button size="sm" variant="outline" onClick={() => navigate("/portal/payments")}>
+                      <Building2 className="h-4 w-4 mr-1" />
+                      Bank transfer details
                     </Button>
                   </div>
                 )}
@@ -219,14 +206,6 @@ const Services = () => {
       )}
       </div>
 
-      <EmbeddedCheckoutDialog
-        invoiceId={activeInvoiceId}
-        open={checkoutOpen}
-        onOpenChange={(open) => {
-          setCheckoutOpen(open);
-          if (!open) setActiveInvoiceId(null);
-        }}
-      />
     </div>
   );
 };
