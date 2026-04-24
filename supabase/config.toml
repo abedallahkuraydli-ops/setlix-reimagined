@@ -14,3 +14,12 @@ verify_jwt = false
 
 [functions.handle-email-suppression]
 verify_jwt = false
+
+[functions.client-ip]
+verify_jwt = false
+
+[functions.calendar-availability]
+verify_jwt = false
+
+[functions.purge-expired-documents]
+verify_jwt = false
