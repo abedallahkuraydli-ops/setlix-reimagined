@@ -352,7 +352,7 @@ const Login = () => {
               </div>
             )}
 
-            {!isLogin && (
+            {!isLogin && !setupMode && (
               <div className="flex items-start gap-2 pt-1">
                 <Checkbox
                   id="accept-policy"
