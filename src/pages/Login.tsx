@@ -123,6 +123,8 @@ const Login = () => {
     toast({ title: "Superadmin account ready", description: "Welcome." });
     navigate("/admin");
   };
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       toast({ title: "Passwords don't match", variant: "destructive" });
