@@ -86,7 +86,43 @@ const Login = () => {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSuperadminSetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isSuperadminEmail) return;
+    if (password !== confirmPassword) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    if (!passwordValid) {
+      toast({ title: "Password doesn't meet requirements", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke("setup-superadmin", {
+      body: { action: "setup", password },
+    });
+    if (error || data?.error) {
+      setLoading(false);
+      toast({
+        title: "Setup failed",
+        description: data?.error ?? error?.message ?? "Unknown error",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Account is created with email already confirmed — log in immediately.
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: SUPERADMIN_EMAIL,
+      password,
+    });
+    setLoading(false);
+    if (signInErr) {
+      toast({ title: "Login failed", description: signInErr.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Superadmin account ready", description: "Welcome." });
+    navigate("/admin");
+  };
     e.preventDefault();
     if (password !== confirmPassword) {
       toast({ title: "Passwords don't match", variant: "destructive" });
