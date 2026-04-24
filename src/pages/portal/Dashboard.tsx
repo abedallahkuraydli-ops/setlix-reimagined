@@ -133,10 +133,10 @@ const Dashboard = () => {
   };
 
   const stats = [
-    { label: "Active Services", value: String(activeCount), icon: Briefcase, color: "text-primary" },
-    { label: "Documents", value: String(documentsCount), icon: FileText, color: "text-accent" },
-    { label: "Pending Requests", value: String(pendingRequests.length), icon: Clock, color: "text-amber-600" },
-    { label: "Completed", value: String(completedCount), icon: CheckCircle2, color: "text-emerald-600" },
+    { label: "Active Services", value: String(activeCount), icon: Briefcase, color: "text-primary", path: "/portal/services" },
+    { label: "Documents", value: String(documentsCount), icon: FileText, color: "text-accent", path: "/portal/documents" },
+    { label: "Pending Requests", value: String(pendingRequests.length), icon: Clock, color: "text-amber-600", path: "/portal/documents" },
+    { label: "Completed", value: String(completedCount), icon: CheckCircle2, color: "text-emerald-600", path: "/portal/services" },
   ];
 
   const quickActions = [
@@ -303,19 +303,33 @@ const Dashboard = () => {
               Includes late payment fee of {formatMoney(billingSummary.lateFeeCents, billingSummary.currency)}.
             </p>
           )}
+          {billingSummary.remainingCents > 0 && (
+            <div className="mt-4 flex items-center justify-end">
+              <button
+                onClick={() => navigate("/portal/payments")}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold px-4 py-2 hover:bg-primary/90 transition-colors"
+              >
+                Pay now <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-card border border-border rounded-xl p-4 md:p-5 space-y-2">
+          <button
+            key={stat.label}
+            onClick={() => navigate(stat.path)}
+            className="text-left bg-card border border-border rounded-xl p-4 md:p-5 space-y-2 hover:border-primary/30 hover:shadow-md transition-all duration-200"
+          >
             <div className="flex items-center justify-between">
               <stat.icon className={`h-5 w-5 ${stat.color}`} />
             </div>
             <p className="text-2xl font-bold text-foreground">{stat.value}</p>
             <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
-          </div>
+          </button>
         ))}
       </div>
 
