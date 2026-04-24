@@ -74,51 +74,56 @@ const Login = () => {
     return <Navigate to={isAdmin ? "/admin" : "/portal"} replace />;
   }
 
+  // Bootstraps the superadmin account (creates or sets password + confirms
+  // email server-side), then signs in. Returns true on success.
+  const bootstrapSuperadminAndSignIn = async (): Promise<boolean> => {
+    if (!passwordValid) {
+      toast({
+        title: "Choose a stronger password",
+        description:
+          "First-time superadmin setup requires 8+ chars with uppercase, lowercase, number, and special character.",
+        variant: "destructive",
+      });
+      setPasswordFocused(true);
+      return false;
+    }
+    const { data: setupData, error: setupErr } = await supabase.functions.invoke(
+      "setup-superadmin",
+      { body: { action: "setup", password } },
+    );
+    if (setupErr || setupData?.error) {
+      toast({
+        title: "Setup failed",
+        description: setupData?.error ?? setupErr?.message ?? "Unknown error",
+        variant: "destructive",
+      });
+      return false;
+    }
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: SUPERADMIN_EMAIL,
+      password,
+    });
+    if (signInErr) {
+      toast({ title: "Login failed", description: signInErr.message, variant: "destructive" });
+      return false;
+    }
+    setSuperadminNeedsSetup(false);
+    toast({ title: "Superadmin account ready", description: "Welcome." });
+    navigate("/admin");
+    return true;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const trimmedEmail = email.trim();
+    const isSuperadmin = trimmedEmail.toLowerCase() === SUPERADMIN_EMAIL;
 
-    // Superadmin first-time entry: if the account hasn't been bootstrapped
-    // yet, use the typed password to create it (with email pre-confirmed),
-    // then sign in. Subsequent logins go through the normal path.
-    if (trimmedEmail.toLowerCase() === SUPERADMIN_EMAIL && superadminNeedsSetup) {
-      if (!passwordValid) {
-        setLoading(false);
-        toast({
-          title: "Choose a stronger password",
-          description:
-            "First-time superadmin setup requires a password with 8+ chars, upper, lower, number, and special character.",
-          variant: "destructive",
-        });
-        setPasswordFocused(true);
-        return;
-      }
-      const { data: setupData, error: setupErr } = await supabase.functions.invoke(
-        "setup-superadmin",
-        { body: { action: "setup", password } },
-      );
-      if (setupErr || setupData?.error) {
-        setLoading(false);
-        toast({
-          title: "Setup failed",
-          description: setupData?.error ?? setupErr?.message ?? "Unknown error",
-          variant: "destructive",
-        });
-        return;
-      }
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email: SUPERADMIN_EMAIL,
-        password,
-      });
+    // First-time superadmin entry — if the status check already flagged it,
+    // skip the normal sign-in attempt entirely.
+    if (isSuperadmin && superadminNeedsSetup) {
+      await bootstrapSuperadminAndSignIn();
       setLoading(false);
-      if (signInErr) {
-        toast({ title: "Login failed", description: signInErr.message, variant: "destructive" });
-        return;
-      }
-      setSuperadminNeedsSetup(false);
-      toast({ title: "Superadmin account ready", description: "Welcome." });
-      navigate("/admin");
       return;
     }
 
@@ -126,6 +131,30 @@ const Login = () => {
       email: trimmedEmail,
       password,
     });
+
+    // Fallback: if this is the superadmin email and sign-in failed because
+    // the account isn't fully set up (no password yet, or email not yet
+    // confirmed), bootstrap it on the fly using the typed password.
+    if (
+      error &&
+      isSuperadmin &&
+      (error.message === "Invalid login credentials" ||
+        error.message === "Email not confirmed" ||
+        /invalid|not confirmed/i.test(error.message))
+    ) {
+      // Re-check status to confirm bootstrap is actually appropriate.
+      const { data: status } = await supabase.functions.invoke("setup-superadmin", {
+        body: { action: "status" },
+      });
+      if (status?.needs_setup) {
+        setSuperadminNeedsSetup(true);
+        const ok = await bootstrapSuperadminAndSignIn();
+        setLoading(false);
+        if (!ok) return;
+        return;
+      }
+    }
+
     setLoading(false);
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
