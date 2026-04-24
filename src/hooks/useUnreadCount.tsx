@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "./useProfile";
 
 /**
  * Counts unread messages.
@@ -7,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
  * - Admin mode: counts conversations that contain at least one unread client->admin message.
  */
 export function useUnreadCount(mode: "client" | "admin") {
+  const { profile } = useProfile();
+  const profileId = profile?.id ?? null;
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -14,19 +17,14 @@ export function useUnreadCount(mode: "client" | "admin") {
 
     const refresh = async () => {
       if (mode === "client") {
-        const { data: auth } = await supabase.auth.getUser();
-        if (!auth.user) return;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("user_id", auth.user.id)
-          .maybeSingle();
-        if (!profile) return;
-
+        if (!profileId) {
+          if (!cancelled) setCount(0);
+          return;
+        }
         const { data: convs } = await supabase
           .from("conversations")
           .select("id")
-          .eq("client_id", profile.id);
+          .eq("client_id", profileId);
         const convIds = (convs ?? []).map((c) => c.id);
         if (convIds.length === 0) {
           if (!cancelled) setCount(0);
@@ -37,7 +35,7 @@ export function useUnreadCount(mode: "client" | "admin") {
           .select("id", { count: "exact", head: true })
           .in("conversation_id", convIds)
           .eq("read", false)
-          .neq("sender_id", profile.id);
+          .neq("sender_id", profileId);
         if (!cancelled) setCount(c ?? 0);
       } else {
         const { data } = await supabase
@@ -62,7 +60,7 @@ export function useUnreadCount(mode: "client" | "admin") {
       }
     };
 
-    refresh();
+    if (mode === "admin" || profileId) refresh();
 
     const channel = supabase
       .channel(`unread-${mode}`)
@@ -74,7 +72,7 @@ export function useUnreadCount(mode: "client" | "admin") {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [mode]);
+  }, [mode, profileId]);
 
   return count;
 }

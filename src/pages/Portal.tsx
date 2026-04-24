@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { Navigate, Routes, Route, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { PortalSidebar } from "@/components/portal/PortalSidebar";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 import { useRole } from "@/hooks/useRole";
-import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
 import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/portal/Dashboard";
 import Services from "@/pages/portal/Services";
@@ -34,48 +34,30 @@ const PortalShell = ({ children }: { children: React.ReactNode }) => (
 );
 
 const Portal = () => {
-  const { user, isAdmin, roleLoading } = useRole();
+  const { isAdmin, roleLoading } = useRole();
+  const { profile, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
-  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
-  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+  const location = useLocation();
 
+  // Redirect admins away from the portal as soon as we know they're admin.
   useEffect(() => {
-    if (roleLoading || !user) return;
-
-    if (isAdmin) {
+    if (!roleLoading && isAdmin) {
       navigate("/admin", { replace: true });
-      return;
     }
+  }, [isAdmin, roleLoading, navigate]);
 
-    let cancelled = false;
-    const checkOnboarding = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("user_id", user.id)
-        .single();
+  // Handle index path redirect once profile is known.
+  useEffect(() => {
+    if (profileLoading || !profile) return;
+    const path = location.pathname;
+    if (path === "/portal" || path === "/portal/") {
+      navigate(profile.onboarding_completed ? "/portal/dashboard" : "/portal/onboarding", { replace: true });
+    } else if (!profile.onboarding_completed && path !== "/portal/onboarding") {
+      navigate("/portal/onboarding", { replace: true });
+    }
+  }, [profile, profileLoading, location.pathname, navigate]);
 
-      if (cancelled) return;
-
-      const completed = data?.onboarding_completed ?? false;
-      setOnboardingCompleted(completed);
-      setCheckingOnboarding(false);
-
-      const path = window.location.pathname;
-      if (path === "/portal" || path === "/portal/") {
-        navigate(completed ? "/portal/dashboard" : "/portal/onboarding", { replace: true });
-      } else if (!completed && path !== "/portal/onboarding") {
-        navigate("/portal/onboarding", { replace: true });
-      }
-    };
-
-    checkOnboarding();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, isAdmin, roleLoading, navigate]);
-
-  if (roleLoading || checkingOnboarding) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -89,7 +71,7 @@ const Portal = () => {
       <Route
         path="*"
         element={
-          onboardingCompleted === false ? (
+          profile && !profile.onboarding_completed ? (
             <Navigate to="/portal/onboarding" replace />
           ) : (
             <PortalShell>
