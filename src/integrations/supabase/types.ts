@@ -175,6 +175,87 @@ export type Database = {
           },
         ]
       }
+      client_billing: {
+        Row: {
+          client_id: string
+          created_at: string
+          currency: string
+          id: string
+          last_payment_at: string | null
+          late_fee_applied_count: number
+          late_fee_enabled: boolean
+          late_fee_last_applied_at: string | null
+          late_fee_percentage: number
+          next_payment_due_at: string | null
+          notes: string | null
+          total_override_cents: number | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          last_payment_at?: string | null
+          late_fee_applied_count?: number
+          late_fee_enabled?: boolean
+          late_fee_last_applied_at?: string | null
+          late_fee_percentage?: number
+          next_payment_due_at?: string | null
+          notes?: string | null
+          total_override_cents?: number | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          last_payment_at?: string | null
+          late_fee_applied_count?: number
+          late_fee_enabled?: boolean
+          late_fee_last_applied_at?: string | null
+          late_fee_percentage?: number
+          next_payment_due_at?: string | null
+          notes?: string | null
+          total_override_cents?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_payments: {
+        Row: {
+          amount_cents: number
+          client_id: string
+          created_at: string
+          currency: string
+          id: string
+          note: string | null
+          paid_at: string
+          recorded_by_admin_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          client_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          note?: string | null
+          paid_at?: string
+          recorded_by_admin_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          client_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          note?: string | null
+          paid_at?: string
+          recorded_by_admin_id?: string | null
+        }
+        Relationships: []
+      }
       client_services: {
         Row: {
           assigned_admin_id: string | null
