@@ -283,17 +283,15 @@ const Login = () => {
           )}
 
           {!setupMode && isLogin && superadminNeedsSetup && (
-            <div className="mb-4 rounded-md border border-border bg-muted/50 p-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground">
-                Superadmin account not set up yet.
+            <div className="mb-4 rounded-md border border-border bg-muted/50 p-3">
+              <p className="text-xs font-semibold text-foreground">
+                First-time superadmin entry
               </p>
-              <button
-                type="button"
-                onClick={() => setSetupMode(true)}
-                className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
-              >
-                Set up now
-              </button>
+              <p className="text-xs text-muted-foreground mt-1">
+                Type the password you want to use for {SUPERADMIN_EMAIL} below and press
+                Log In. Your account will be created automatically — no email
+                verification required.
+              </p>
             </div>
           )}
 
