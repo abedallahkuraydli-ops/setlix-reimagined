@@ -152,7 +152,9 @@ const Onboarding = () => {
     }
 
     setLoading(false);
-    navigate("/portal/dashboard", { replace: true });
+    // Full reload so Portal re-fetches onboarding_completed and renders the dashboard
+    // (in-app navigate would be intercepted by Portal's stale onboardingCompleted=false state).
+    window.location.assign("/portal/dashboard");
   };
 
   return (
