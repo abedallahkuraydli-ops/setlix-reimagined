@@ -1,0 +1,302 @@
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useRole } from "@/hooks/useRole";
+import { Check, X, Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { PRIVACY_POLICY_VERSION, recordConsent } from "@/lib/consent";
+
+const passwordRules = [
+  { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { id: "upper", label: "One uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+  { id: "lower", label: "One lowercase letter", test: (p: string) => /[a-z]/.test(p) },
+  { id: "number", label: "One number", test: (p: string) => /[0-9]/.test(p) },
+  { id: "special", label: "One special character", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+];
+
+const Login = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user, roleLoading, isAdmin } = useRole();
+
+  const passwordChecks = passwordRules.map((r) => ({ ...r, valid: r.test(password) }));
+  const passwordValid = passwordChecks.every((c) => c.valid);
+
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to={isAdmin ? "/admin" : "/portal"} replace />;
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/portal");
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    if (!passwordValid) {
+      toast({ title: "Password doesn't meet requirements", variant: "destructive" });
+      return;
+    }
+    if (!acceptedPolicy) {
+      toast({ title: "Please accept the Privacy Policy to continue", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${window.location.origin}/portal`,
+      },
+    });
+    if (!error && data.user) {
+      await recordConsent({
+        userId: data.user.id,
+        consentType: "privacy_policy",
+        policyVersion: PRIVACY_POLICY_VERSION,
+        granted: true,
+        metadata: { source: "signup" },
+      });
+    }
+    setLoading(false);
+    if (error) {
+      toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "Check your email",
+        description: "We sent you a confirmation link. Please verify your email to continue.",
+      });
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast({ title: "Enter your email first", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Check your email", description: "Password reset link sent." });
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-primary relative overflow-hidden">
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-1/4 right-0 w-[600px] h-[600px] border-[80px] border-primary-foreground/20 rotate-45 translate-x-1/3" />
+        <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] border-[60px] border-primary-foreground/15 rotate-45 -translate-x-1/4" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md mx-4">
+        <a href="/" className="flex items-center justify-center gap-2 mb-8">
+          <span className="text-primary-foreground font-black text-4xl leading-none">✳</span>
+          <span className="text-primary-foreground font-bold text-2xl tracking-wider">SETLIX</span>
+        </a>
+
+        <div className="bg-background rounded-xl shadow-2xl p-8">
+          <div className="flex mb-8 bg-muted rounded-lg p-1">
+            <button
+              onClick={() => setIsLogin(true)}
+              className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
+                isLogin
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Log In
+            </button>
+            <button
+              onClick={() => setIsLogin(false)}
+              className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
+                !isLogin
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          <form onSubmit={isLogin ? handleLogin : handleSignup} className="space-y-4">
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required={!isLogin}
+                  maxLength={100}
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-foreground">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                maxLength={255}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-foreground">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
+                  required
+                  minLength={isLogin ? 6 : 8}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {!isLogin && (passwordFocused || password.length > 0) && (
+                <div className="rounded-md border border-border bg-muted/50 p-3 space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                  <p className="text-xs font-medium text-foreground mb-2">Password must contain:</p>
+                  {passwordChecks.map((check) => (
+                    <div key={check.id} className="flex items-center gap-2 text-xs">
+                      {check.valid ? (
+                        <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-500" />
+                      ) : (
+                        <X className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                      <span className={check.valid ? "text-green-600 dark:text-green-500" : "text-muted-foreground"}>
+                        {check.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((s) => !s)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="flex items-start gap-2 pt-1">
+                <Checkbox
+                  id="accept-policy"
+                  checked={acceptedPolicy}
+                  onCheckedChange={(c) => setAcceptedPolicy(c === true)}
+                />
+                <label htmlFor="accept-policy" className="text-xs text-muted-foreground leading-tight">
+                  I have read and accept the{" "}
+                  <a href="/privacy-policy" target="_blank" className="underline text-primary">
+                    Privacy Policy
+                  </a>{" "}
+                  (v{PRIVACY_POLICY_VERSION}) and consent to processing of my personal data under
+                  GDPR &amp; Portuguese Law 58/2019.
+                </label>
+              </div>
+            )}
+
+            {isLogin && (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm text-accent hover:underline"
+              >
+                Forgot password?
+              </button>
+            )}
+
+            <Button type="submit" className="w-full" size="lg" disabled={loading || (!isLogin && (!passwordValid || !acceptedPolicy))}>
+              {loading ? (
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
+              ) : isLogin ? (
+                "Log In"
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
