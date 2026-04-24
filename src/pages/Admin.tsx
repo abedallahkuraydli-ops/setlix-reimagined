@@ -29,6 +29,7 @@ const Admin = () => (
             <Route path="settings" element={<SuperadminRoute><AdminSettings /></SuperadminRoute>} />
             <Route path="breach-procedure" element={<SuperadminRoute><AdminBreachProcedure /></SuperadminRoute>} />
             <Route path="admins" element={<SuperadminRoute><AdminManagement /></SuperadminRoute>} />
+            <Route path="surveys" element={<SuperadminRoute><AdminSurveys /></SuperadminRoute>} />
             <Route path="*" element={<Navigate to="/admin/clients" replace />} />
           </Routes>
         </main>

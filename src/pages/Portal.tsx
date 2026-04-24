@@ -105,6 +105,7 @@ const Portal = () => {
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="support" element={<Support />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="surveys" element={<Surveys />} />
                 <Route path="*" element={<Navigate to="/portal/dashboard" replace />} />
               </Routes>
             </PortalShell>
