@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Upload, Building2, Trash2, Download, Loader2, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { FileText, Upload, Building2, Trash2, Download, Loader2, AlertCircle, ShieldCheck, MapPin, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, formatBytes, logAudit, validateFile } from "@/lib/documents";
+import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, computeSha256, formatBytes, logAudit, retentionLabel, validateFile } from "@/lib/documents";
 
 interface DocRecord {
   id: string;
