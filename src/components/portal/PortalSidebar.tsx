@@ -10,6 +10,7 @@ import {
   CalendarClock,
   HelpCircle,
   Settings,
+  ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -32,6 +33,7 @@ const items = [
   { title: "My Services", url: "/portal/services", icon: Briefcase },
   { title: "Services Catalogue", url: "/portal/catalogue", icon: BookOpen },
   { title: "Documents", url: "/portal/documents", icon: FileText },
+  { title: "Surveys", url: "/portal/surveys", icon: ClipboardList },
   { title: "Payments", url: "/portal/payments", icon: CreditCard },
   { title: "Invoices", url: "/portal/invoices", icon: Receipt },
   { title: "Messages", url: "/portal/messages", icon: MessageSquare },

@@ -17,6 +17,7 @@ import Support from "@/pages/portal/Support";
 import Settings from "@/pages/portal/Settings";
 import Appointments from "@/pages/portal/Appointments";
 import Contract from "@/pages/portal/Contract";
+import Surveys from "@/pages/portal/Surveys";
 
 const PortalShell = ({ children }: { children: React.ReactNode }) => (
   <SidebarProvider>
@@ -104,6 +105,7 @@ const Portal = () => {
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="support" element={<Support />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="surveys" element={<Surveys />} />
                 <Route path="*" element={<Navigate to="/portal/dashboard" replace />} />
               </Routes>
             </PortalShell>
