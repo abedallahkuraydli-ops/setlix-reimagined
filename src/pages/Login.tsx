@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRole } from "@/hooks/useRole";
 import { Check, X, Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PRIVACY_POLICY_VERSION, recordConsent, stagePendingConsent } from "@/lib/consent";
+import { PRIVACY_POLICY_VERSION, stagePendingConsent } from "@/lib/consent";
 
 const passwordRules = [
   { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
