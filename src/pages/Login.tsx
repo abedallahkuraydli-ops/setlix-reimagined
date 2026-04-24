@@ -18,6 +18,8 @@ const passwordRules = [
   { id: "special", label: "One special character", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ];
 
+const SUPERADMIN_EMAIL = "info@setlix.pt";
+
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -29,12 +31,36 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+  const [superadminNeedsSetup, setSuperadminNeedsSetup] = useState(false);
+  const [setupMode, setSetupMode] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, roleLoading, isAdmin } = useRole();
 
   const passwordChecks = passwordRules.map((r) => ({ ...r, valid: r.test(password) }));
   const passwordValid = passwordChecks.every((c) => c.valid);
+  const isSuperadminEmail = email.trim().toLowerCase() === SUPERADMIN_EMAIL;
+
+  // When the superadmin email is typed, check if the account still needs
+  // first-time setup (no password yet). If so, surface the setup CTA.
+  useEffect(() => {
+    let cancelled = false;
+    if (!isSuperadminEmail) {
+      setSuperadminNeedsSetup(false);
+      setSetupMode(false);
+      return;
+    }
+    (async () => {
+      const { data, error } = await supabase.functions.invoke("setup-superadmin", {
+        body: { action: "status" },
+      });
+      if (cancelled || error) return;
+      setSuperadminNeedsSetup(Boolean(data?.needs_setup));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSuperadminEmail]);
 
   if (roleLoading) {
     return (
