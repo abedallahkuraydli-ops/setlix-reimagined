@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, ChevronDown, Search, Check } from "lucide-react";
+import Logo from "@/components/Logo";
 import { format, differenceInYears } from "date-fns";
 import { cn } from "@/lib/utils";
 import PhoneInput from "react-phone-number-input";
@@ -54,7 +55,7 @@ const Onboarding = () => {
       .from("service_catalogue")
       .select("id, name, category")
       .eq("active", true)
-      .order("category")
+      .eq("category", "Main Services")
       .order("name")
       .then(({ data }) => {
         if (data) setCatalogue(data);
@@ -162,9 +163,11 @@ const Onboarding = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-[540px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <a href="/" className="flex items-center justify-center gap-2 mb-6">
-          <span className="text-primary-foreground font-black text-4xl leading-none">✳</span>
-          <span className="text-primary-foreground font-bold text-2xl tracking-wider">SETLIX</span>
+        <a href="/" className="flex items-center justify-center mb-6">
+          <Logo
+            iconClassName="w-10 h-10 text-primary-foreground"
+            textClassName="text-primary-foreground font-bold text-2xl tracking-wider"
+          />
         </a>
 
         <div className="bg-background rounded-xl shadow-2xl p-8">

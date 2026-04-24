@@ -35,7 +35,9 @@ export function AdminSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent>
         <div className="p-4 flex items-center gap-2 border-b border-sidebar-border mb-2">
-          <span className="text-sidebar-foreground font-black text-2xl leading-none">✳</span>
+          <svg viewBox="0 0 24 24" className="w-7 h-7 text-sidebar-foreground shrink-0" fill="currentColor" aria-hidden="true">
+            <path d="M12 2 L13.2 9 L20 4.5 L15.5 11.3 L22 12 L15.5 12.7 L20 19.5 L13.2 15 L12 22 L10.8 15 L4 19.5 L8.5 12.7 L2 12 L8.5 11.3 L4 4.5 L10.8 9 Z" />
+          </svg>
           {!collapsed && (
             <span className="text-sidebar-foreground font-bold text-lg tracking-wider">SETLIX</span>
           )}
