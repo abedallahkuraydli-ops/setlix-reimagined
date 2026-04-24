@@ -92,6 +92,7 @@ const Documents = () => {
     }
     setUploading(true);
     const filePath = `${user.id}/${Date.now()}_${file.name}`;
+    const sha256 = await computeSha256(file);
     const { error: storageError } = await supabase.storage
       .from("documents")
       .upload(filePath, file, { contentType: file.type });
@@ -108,6 +109,7 @@ const Documents = () => {
       file_size: file.size,
       category: "client_upload",
       mime_type: file.type,
+      sha256_hash: sha256,
     }).select("id").single();
     if (dbError) toast({ title: "Error saving record", description: dbError.message, variant: "destructive" });
     else {
@@ -120,7 +122,7 @@ const Documents = () => {
         document_id: insertedDoc?.id ?? null,
         file_path: filePath,
         file_name: file.name,
-        metadata: { size: file.size, mime: file.type },
+        metadata: { size: file.size, mime: file.type, sha256 },
       });
       fetchDocs();
     }
