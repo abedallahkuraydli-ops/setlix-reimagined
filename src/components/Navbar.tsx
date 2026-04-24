@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
@@ -47,8 +47,9 @@ const Navbar = () => {
               variant="secondary"
               className="ml-2"
             >
-              <Link to={user ? "/portal" : "/login"}>
-                {user ? "Go to Portal" : "Sign in"}
+              <Link to={user ? "/portal" : "/login"} className="flex items-center gap-1.5">
+                <LayoutDashboard size={16} />
+                {user ? "Client Portal" : "Client Portal"}
               </Link>
             </Button>
           )}
@@ -79,9 +80,10 @@ const Navbar = () => {
             <Link
               to={user ? "/portal" : "/login"}
               onClick={() => setOpen(false)}
-              className="block py-3 text-primary-foreground font-semibold text-sm"
+              className="flex items-center gap-2 py-3 text-primary-foreground font-semibold text-sm"
             >
-              {user ? "Go to Portal →" : "Sign in →"}
+              <LayoutDashboard size={16} />
+              Client Portal →
             </Link>
           )}
         </div>
