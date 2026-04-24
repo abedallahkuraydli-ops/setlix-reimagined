@@ -251,6 +251,47 @@ const Documents = () => {
         <p className="text-muted-foreground text-sm mt-1">Access your files, agreements, and reports.</p>
       </div>
 
+      {/* GDPR transparency notice (Art. 13) */}
+      <div className="mb-6 bg-card border border-border rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="rounded-full bg-primary/10 p-2 shrink-0">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-foreground mb-2">How we protect your documents</p>
+            <ul className="space-y-1.5 text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>Stored encrypted at rest in the European Union, on private storage accessible only to you and authorised Setlix staff.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>
+                  Retention: <strong>{retentionLabel("client_upload")}</strong> for your uploads;{" "}
+                  <strong>{retentionLabel("setlix_issued")}</strong> for invoices &amp; contracts. Files are
+                  automatically purged after that.
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>Every upload, download and deletion is logged in a tamper-evident audit trail. Each file gets a SHA-256 fingerprint for integrity.</span>
+              </li>
+            </ul>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button asChild size="sm" variant="outline">
+                <Link to="/portal/settings?tab=privacy">Export my data</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/portal/settings?tab=privacy">Request erasure</Link>
+              </Button>
+              <Button asChild size="sm" variant="ghost">
+                <Link to="/privacy-policy" target="_blank">Privacy policy</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-6">
         {/* Requested Documents */}
         {docRequests.length > 0 && (
