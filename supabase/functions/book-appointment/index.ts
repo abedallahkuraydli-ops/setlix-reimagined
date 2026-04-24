@@ -151,6 +151,78 @@ Deno.serve(async (req) => {
 
     console.log("Appointment booked", appt.id, "for profile", profile.id, body.reschedule_id ? `(rescheduled from ${body.reschedule_id})` : "");
 
+    // Fire-and-forget: send confirmation email with Meet link from admin profile
+    try {
+      // Resolve Meet link + admin display name
+      let meetLink: string | null = null;
+      let adminName: string | null = null;
+      if (chosenAdminProfileId) {
+        const { data: adminProfile } = await adminClient
+          .from("profiles")
+          .select("meet_link, full_name, company_name, first_name, last_name")
+          .eq("id", chosenAdminProfileId)
+          .maybeSingle();
+        if (adminProfile) {
+          meetLink = adminProfile.meet_link ?? null;
+          adminName = adminProfile.company_name
+            || adminProfile.full_name
+            || [adminProfile.first_name, adminProfile.last_name].filter(Boolean).join(" ")
+            || null;
+        }
+      }
+      // Fallback: any admin with a meet_link from the bookable list
+      if (!meetLink) {
+        const { data: bookable } = await adminClient.rpc("bookable_admins_for_client", {
+          _client_profile_id: profile.id,
+        });
+        const withLink = (bookable ?? []).find((b: { meet_link: string | null }) => b.meet_link);
+        if (withLink) {
+          meetLink = (withLink as { meet_link: string }).meet_link;
+          if (!adminName) adminName = (withLink as { company_name: string | null }).company_name ?? null;
+        }
+      }
+
+      const recipientEmail = userData.user.email;
+      if (recipientEmail) {
+        const clientName = profile.first_name
+          || profile.full_name
+          || (userData.user.user_metadata?.first_name as string | undefined)
+          || null;
+
+        const fmt = (d: Date) => new Intl.DateTimeFormat("en-GB", {
+          weekday: "long", day: "numeric", month: "long", year: "numeric",
+          hour: "2-digit", minute: "2-digit",
+          timeZone: "Europe/Lisbon",
+        }).format(d);
+        const fmtEnd = (d: Date) => new Intl.DateTimeFormat("en-GB", {
+          hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon",
+        }).format(d);
+
+        const { error: emailErr } = await adminClient.functions.invoke(
+          "send-transactional-email",
+          {
+            body: {
+              templateName: "appointment-confirmation",
+              recipientEmail,
+              idempotencyKey: `appointment-confirm-${appt.id}`,
+              templateData: {
+                name: clientName,
+                slotStartFormatted: fmt(slotStart),
+                slotEndFormatted: fmtEnd(slotEnd),
+                timezone: "Europe/Lisbon",
+                meetLink,
+                adminName: adminName ?? "Setlix Team",
+                notes: body.notes ?? null,
+              },
+            },
+          },
+        );
+        if (emailErr) console.error("appointment confirmation email failed", emailErr);
+      }
+    } catch (emailEx) {
+      console.error("appointment confirmation email exception", emailEx);
+    }
+
     return new Response(JSON.stringify({ appointment: appt }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
