@@ -121,6 +121,12 @@ const AdminClientDetail = () => {
   const [authorisedDocIds, setAuthorisedDocIds] = useState<Set<string>>(new Set());
   const [unauthDialogOpen, setUnauthDialogOpen] = useState(false);
   const [unauthDocName, setUnauthDocName] = useState<string | null>(null);
+  const [purposeDialogOpen, setPurposeDialogOpen] = useState(false);
+  const [pendingDownload, setPendingDownload] = useState<
+    | { kind: "client_doc"; doc: ClientDoc }
+    | { kind: "doc_request"; doc: DocRequest }
+    | null
+  >(null);
 
   // Load this admin's authorised doc ids (superadmins skip)
   useEffect(() => {
@@ -131,19 +137,36 @@ const AdminClientDetail = () => {
   const canDownload = (docId: string) => isSuperadmin || authorisedDocIds.has(docId);
 
   const guardedDownload = async (doc: ClientDoc) => {
-    if (canDownload(doc.id)) {
-      return handleDownloadClientDoc(doc);
+    if (!canDownload(doc.id)) {
+      setUnauthDocName(doc.file_name);
+      setUnauthDialogOpen(true);
+      if (user) {
+        await logUnauthorisedAttempt({
+          adminUserId: user.id,
+          clientProfileId: profile?.id ?? null,
+          documentId: doc.id,
+          documentName: doc.file_name,
+        });
+      }
+      return;
     }
-    setUnauthDocName(doc.file_name);
-    setUnauthDialogOpen(true);
-    if (user) {
-      await logUnauthorisedAttempt({
-        adminUserId: user.id,
-        clientProfileId: profile?.id ?? null,
-        documentId: doc.id,
-        documentName: doc.file_name,
-      });
+    setPendingDownload({ kind: "client_doc", doc });
+    setPurposeDialogOpen(true);
+  };
+
+  const requestPurposeAndDownloadDocRequest = (doc: DocRequest) => {
+    setPendingDownload({ kind: "doc_request", doc });
+    setPurposeDialogOpen(true);
+  };
+
+  const executePendingDownload = async (purpose: string) => {
+    if (!pendingDownload) return;
+    if (pendingDownload.kind === "client_doc") {
+      await handleDownloadClientDoc(pendingDownload.doc, purpose);
+    } else {
+      await handleDownloadDoc(pendingDownload.doc, purpose);
     }
+    setPendingDownload(null);
   };
 
   const [addServiceOpen, setAddServiceOpen] = useState(false);
