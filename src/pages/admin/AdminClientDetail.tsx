@@ -513,6 +513,9 @@ const AdminClientDetail = () => {
         clientName={profile.full_name || profile.first_name || "this client"}
       />
 
+      {/* Billing */}
+      <AdminBillingSection clientId={profile.id} />
+
       {/* Invoices & Payments */}
       <AdminInvoicesSection clientId={profile.id} clientUserId={profile.user_id} />
 
