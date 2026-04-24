@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { label: "About", href: "/#about" },
@@ -10,6 +13,7 @@ const navLinks = [
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-primary-foreground/10">
@@ -36,11 +40,24 @@ const Navbar = () => {
               {link.label}
             </a>
           ))}
+          {!loading && (
+            <Button
+              asChild
+              size="sm"
+              variant="secondary"
+              className="ml-2"
+            >
+              <Link to={user ? "/portal" : "/login"}>
+                {user ? "Go to Portal" : "Sign in"}
+              </Link>
+            </Button>
+          )}
         </div>
 
         <button
           className="md:hidden text-primary-foreground"
           onClick={() => setOpen(!open)}
+          aria-label="Toggle menu"
         >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -58,6 +75,15 @@ const Navbar = () => {
               {link.label}
             </a>
           ))}
+          {!loading && (
+            <Link
+              to={user ? "/portal" : "/login"}
+              onClick={() => setOpen(false)}
+              className="block py-3 text-primary-foreground font-semibold text-sm"
+            >
+              {user ? "Go to Portal →" : "Sign in →"}
+            </Link>
+          )}
         </div>
       )}
     </nav>
