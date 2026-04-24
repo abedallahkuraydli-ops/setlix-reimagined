@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRole } from "@/hooks/useRole";
 import { Check, X, Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PRIVACY_POLICY_VERSION, recordConsent } from "@/lib/consent";
+import { PRIVACY_POLICY_VERSION, stagePendingConsent } from "@/lib/consent";
 
 const passwordRules = [
   { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
@@ -84,8 +84,10 @@ const Login = () => {
       },
     });
     if (!error && data.user) {
-      await recordConsent({
-        userId: data.user.id,
+      // The new user has no session yet (email verification required), so
+      // RLS would block consent_log inserts. Stage locally and flush after
+      // first successful sign-in.
+      stagePendingConsent({
         consentType: "privacy_policy",
         policyVersion: PRIVACY_POLICY_VERSION,
         granted: true,

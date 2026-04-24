@@ -39,6 +39,53 @@ const fetchClientIp = async (): Promise<string | null> => {
   return null;
 };
 
+const PENDING_CONSENTS_KEY = "setlix_pending_consents";
+
+interface PendingConsent {
+  consentType: ConsentType;
+  policyVersion: string;
+  granted: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Stage a consent locally for users that signed up but haven't verified
+ * their email yet (no auth session => RLS would block the insert).
+ * Flushed automatically by `flushPendingConsents` after first sign-in.
+ */
+export const stagePendingConsent = (consent: PendingConsent) => {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(PENDING_CONSENTS_KEY);
+    const existing: PendingConsent[] = raw ? JSON.parse(raw) : [];
+    existing.push(consent);
+    localStorage.setItem(PENDING_CONSENTS_KEY, JSON.stringify(existing));
+  } catch (e) {
+    console.error("Failed to stage pending consent", e);
+  }
+};
+
+export const flushPendingConsents = async (userId: string) => {
+  if (typeof window === "undefined") return;
+  const raw = localStorage.getItem(PENDING_CONSENTS_KEY);
+  if (!raw) return;
+  let pending: PendingConsent[] = [];
+  try {
+    pending = JSON.parse(raw);
+  } catch {
+    localStorage.removeItem(PENDING_CONSENTS_KEY);
+    return;
+  }
+  if (!pending.length) {
+    localStorage.removeItem(PENDING_CONSENTS_KEY);
+    return;
+  }
+  for (const c of pending) {
+    await recordConsent({ userId, ...c });
+  }
+  localStorage.removeItem(PENDING_CONSENTS_KEY);
+};
+
 export const recordConsent = async (params: {
   userId: string;
   consentType: ConsentType;
