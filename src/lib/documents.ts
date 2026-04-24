@@ -50,6 +50,7 @@ interface AuditPayload {
   file_path?: string | null;
   file_name?: string | null;
   metadata?: Record<string, unknown>;
+  download_purpose?: string | null;
 }
 
 export const logAudit = async (payload: AuditPayload) => {
@@ -62,9 +63,33 @@ export const logAudit = async (payload: AuditPayload) => {
       _file_name: payload.file_name ?? undefined,
       _metadata: (payload.metadata ?? undefined) as never,
       _user_agent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-    });
+      _download_purpose: payload.download_purpose ?? undefined,
+    } as never);
     if (error) throw error;
   } catch (err) {
     console.error("Audit log failed", err);
   }
+};
+
+/** Compute SHA-256 of a File using SubtleCrypto. Returns hex string. */
+export const computeSha256 = async (file: File): Promise<string | null> => {
+  try {
+    if (typeof crypto === "undefined" || !crypto.subtle) return null;
+    const buf = await file.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hashBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  } catch (err) {
+    console.warn("SHA-256 hashing failed", err);
+    return null;
+  }
+};
+
+/** Human-readable retention period for a document category (matches DB trigger). */
+export const retentionLabel = (category: string): string => {
+  if (["invoice", "contract", "signed_contract", "setlix_issued", "fiscal"].includes(category)) {
+    return "10 years (Portuguese tax law — Decreto-Lei 28/2019)";
+  }
+  return "5 years (GDPR data minimisation)";
 };

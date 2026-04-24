@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Upload, Building2, Trash2, Download, Loader2, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { FileText, Upload, Building2, Trash2, Download, Loader2, AlertCircle, ShieldCheck, MapPin, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, formatBytes, logAudit, validateFile } from "@/lib/documents";
+import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, computeSha256, formatBytes, logAudit, retentionLabel, validateFile } from "@/lib/documents";
 
 interface DocRecord {
   id: string;
@@ -91,6 +92,7 @@ const Documents = () => {
     }
     setUploading(true);
     const filePath = `${user.id}/${Date.now()}_${file.name}`;
+    const sha256 = await computeSha256(file);
     const { error: storageError } = await supabase.storage
       .from("documents")
       .upload(filePath, file, { contentType: file.type });
@@ -107,6 +109,7 @@ const Documents = () => {
       file_size: file.size,
       category: "client_upload",
       mime_type: file.type,
+      sha256_hash: sha256,
     }).select("id").single();
     if (dbError) toast({ title: "Error saving record", description: dbError.message, variant: "destructive" });
     else {
@@ -119,7 +122,7 @@ const Documents = () => {
         document_id: insertedDoc?.id ?? null,
         file_path: filePath,
         file_name: file.name,
-        metadata: { size: file.size, mime: file.type },
+        metadata: { size: file.size, mime: file.type, sha256 },
       });
       fetchDocs();
     }
@@ -181,6 +184,7 @@ const Documents = () => {
     }
     setUploadingRequestId(requestId);
     const filePath = `${user.id}/requests/${Date.now()}_${file.name}`;
+    const sha256 = await computeSha256(file);
     const { error: storageError } = await supabase.storage
       .from("documents")
       .upload(filePath, file, { contentType: file.type });
@@ -205,6 +209,7 @@ const Documents = () => {
         document_request_id: requestId,
         file_path: filePath,
         file_name: file.name,
+        metadata: { size: file.size, mime: file.type, sha256 },
       });
       fetchDocs();
     }
@@ -244,6 +249,47 @@ const Documents = () => {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Documents</h1>
         <p className="text-muted-foreground text-sm mt-1">Access your files, agreements, and reports.</p>
+      </div>
+
+      {/* GDPR transparency notice (Art. 13) */}
+      <div className="mb-6 bg-card border border-border rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="rounded-full bg-primary/10 p-2 shrink-0">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-foreground mb-2">How we protect your documents</p>
+            <ul className="space-y-1.5 text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>Stored encrypted at rest in the European Union, on private storage accessible only to you and authorised Setlix staff.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>
+                  Retention: <strong>{retentionLabel("client_upload")}</strong> for your uploads;{" "}
+                  <strong>{retentionLabel("setlix_issued")}</strong> for invoices &amp; contracts. Files are
+                  automatically purged after that.
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>Every upload, download and deletion is logged in a tamper-evident audit trail. Each file gets a SHA-256 fingerprint for integrity.</span>
+              </li>
+            </ul>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button asChild size="sm" variant="outline">
+                <Link to="/portal/settings?tab=privacy">Export my data</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/portal/settings?tab=privacy">Request erasure</Link>
+              </Button>
+              <Button asChild size="sm" variant="ghost">
+                <Link to="/privacy-policy" target="_blank">Privacy policy</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">

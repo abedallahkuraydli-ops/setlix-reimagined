@@ -25,10 +25,11 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { ALLOWED_EXTENSIONS, formatBytes, logAudit, validateFile } from "@/lib/documents";
+import { ALLOWED_EXTENSIONS, computeSha256, formatBytes, logAudit, validateFile } from "@/lib/documents";
 import { AdminContractSection } from "@/components/admin/AdminContractSection";
 import { AdminInvoicesSection } from "@/components/admin/AdminInvoicesSection";
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
+import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
 import { fetchAuthorisedDocIds, logUnauthorisedAttempt } from "@/lib/adminDownloads";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -120,6 +121,12 @@ const AdminClientDetail = () => {
   const [authorisedDocIds, setAuthorisedDocIds] = useState<Set<string>>(new Set());
   const [unauthDialogOpen, setUnauthDialogOpen] = useState(false);
   const [unauthDocName, setUnauthDocName] = useState<string | null>(null);
+  const [purposeDialogOpen, setPurposeDialogOpen] = useState(false);
+  const [pendingDownload, setPendingDownload] = useState<
+    | { kind: "client_doc"; doc: ClientDoc }
+    | { kind: "doc_request"; doc: DocRequest }
+    | null
+  >(null);
 
   // Load this admin's authorised doc ids (superadmins skip)
   useEffect(() => {
@@ -130,19 +137,36 @@ const AdminClientDetail = () => {
   const canDownload = (docId: string) => isSuperadmin || authorisedDocIds.has(docId);
 
   const guardedDownload = async (doc: ClientDoc) => {
-    if (canDownload(doc.id)) {
-      return handleDownloadClientDoc(doc);
+    if (!canDownload(doc.id)) {
+      setUnauthDocName(doc.file_name);
+      setUnauthDialogOpen(true);
+      if (user) {
+        await logUnauthorisedAttempt({
+          adminUserId: user.id,
+          clientProfileId: profile?.id ?? null,
+          documentId: doc.id,
+          documentName: doc.file_name,
+        });
+      }
+      return;
     }
-    setUnauthDocName(doc.file_name);
-    setUnauthDialogOpen(true);
-    if (user) {
-      await logUnauthorisedAttempt({
-        adminUserId: user.id,
-        clientProfileId: profile?.id ?? null,
-        documentId: doc.id,
-        documentName: doc.file_name,
-      });
+    setPendingDownload({ kind: "client_doc", doc });
+    setPurposeDialogOpen(true);
+  };
+
+  const requestPurposeAndDownloadDocRequest = (doc: DocRequest) => {
+    setPendingDownload({ kind: "doc_request", doc });
+    setPurposeDialogOpen(true);
+  };
+
+  const executePendingDownload = async (purpose: string) => {
+    if (!pendingDownload) return;
+    if (pendingDownload.kind === "client_doc") {
+      await handleDownloadClientDoc(pendingDownload.doc, purpose);
+    } else {
+      await handleDownloadDoc(pendingDownload.doc, purpose);
     }
+    setPendingDownload(null);
   };
 
   const [addServiceOpen, setAddServiceOpen] = useState(false);
@@ -275,7 +299,7 @@ const AdminClientDetail = () => {
     fetchAll();
   };
 
-  const handleDownloadDoc = async (doc: DocRequest) => {
+  const handleDownloadDoc = async (doc: DocRequest, purpose: string) => {
     if (!doc.uploaded_file_url) return;
     const { data, error } = await supabase.storage.from("documents").createSignedUrl(doc.uploaded_file_url, 60);
     if (error || !data?.signedUrl) {
@@ -291,12 +315,13 @@ const AdminClientDetail = () => {
         document_request_id: doc.id,
         file_path: doc.uploaded_file_url,
         file_name: doc.document_name,
+        download_purpose: purpose,
       });
     }
     window.open(data.signedUrl, "_blank");
   };
 
-  const handleDownloadClientDoc = async (doc: ClientDoc) => {
+  const handleDownloadClientDoc = async (doc: ClientDoc, purpose: string) => {
     const { data, error } = await supabase.storage.from("documents").createSignedUrl(doc.file_path, 60);
     if (error || !data?.signedUrl) {
       toast({ title: "Download failed", variant: "destructive" });
@@ -311,6 +336,7 @@ const AdminClientDetail = () => {
         document_id: doc.id,
         file_path: doc.file_path,
         file_name: doc.file_name,
+        download_purpose: purpose,
       });
     }
     const a = document.createElement("a");
@@ -333,6 +359,7 @@ const AdminClientDetail = () => {
     }
     setUploadingIssued(true);
     const filePath = `${profile.user_id}/issued/${Date.now()}_${file.name}`;
+    const sha256 = await computeSha256(file);
     const { error: storageError } = await supabase.storage
       .from("documents")
       .upload(filePath, file, { contentType: file.type });
@@ -353,6 +380,7 @@ const AdminClientDetail = () => {
       category: "setlix_issued",
       mime_type: file.type,
       uploaded_by_admin_id: adminProfile?.id ?? null,
+      sha256_hash: sha256,
     }).select("id").single();
     if (dbError) {
       toast({ title: "Error saving record", description: dbError.message, variant: "destructive" });
@@ -366,7 +394,7 @@ const AdminClientDetail = () => {
         document_id: insertedDoc?.id ?? null,
         file_path: filePath,
         file_name: file.name,
-        metadata: { size: file.size, mime: file.type },
+        metadata: { size: file.size, mime: file.type, sha256 },
       });
       fetchAll();
     }
@@ -731,7 +759,7 @@ const AdminClientDetail = () => {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {doc.uploaded_file_url && (
-                    <Button variant="ghost" size="icon" onClick={() => handleDownloadDoc(doc)}>
+                    <Button variant="ghost" size="icon" onClick={() => requestPurposeAndDownloadDocRequest(doc)}>
                       <Download className="h-4 w-4" />
                     </Button>
                   )}
@@ -850,6 +878,18 @@ const AdminClientDetail = () => {
         open={unauthDialogOpen}
         onOpenChange={setUnauthDialogOpen}
         documentName={unauthDocName}
+      />
+      <AdminDownloadPurposeDialog
+        open={purposeDialogOpen}
+        onOpenChange={setPurposeDialogOpen}
+        documentName={
+          pendingDownload?.kind === "client_doc"
+            ? pendingDownload.doc.file_name
+            : pendingDownload?.kind === "doc_request"
+              ? pendingDownload.doc.document_name
+              : null
+        }
+        onConfirm={executePendingDownload}
       />
     </div>
   );
