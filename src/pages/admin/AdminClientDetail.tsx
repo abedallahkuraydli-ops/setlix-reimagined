@@ -28,6 +28,7 @@ import { Progress } from "@/components/ui/progress";
 import { ALLOWED_EXTENSIONS, computeSha256, formatBytes, logAudit, validateFile } from "@/lib/documents";
 import { AdminContractSection } from "@/components/admin/AdminContractSection";
 import { AdminInvoicesSection } from "@/components/admin/AdminInvoicesSection";
+import { AdminBillingSection } from "@/components/admin/AdminBillingSection";
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
 import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
 import { fetchAuthorisedDocIds, logUnauthorisedAttempt } from "@/lib/adminDownloads";
