@@ -1,4 +1,4 @@
-import { Users, BookOpen, Calendar, MessageSquare, Settings, Shield, ShieldCheck, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, Calendar, MessageSquare, Settings, Shield, ShieldCheck, ClipboardList } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -15,6 +15,7 @@ import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { useRole } from "@/hooks/useRole";
 
 const baseItems = [
+  { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Clients", url: "/admin/clients", icon: Users },
   { title: "Services Catalogue", url: "/admin/services", icon: BookOpen, superOnly: true },
   { title: "Appointments", url: "/admin/appointments", icon: Calendar },
@@ -57,7 +58,7 @@ export function AdminSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
-                        end={item.url === "/admin/clients"}
+                        end={item.url === "/admin/clients" || item.url === "/admin/dashboard"}
                         className="hover:bg-sidebar-accent/50 transition-colors duration-150"
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >

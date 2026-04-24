@@ -3,6 +3,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import SuperadminRoute from "@/components/SuperadminRoute";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminClients from "@/pages/admin/AdminClients";
 import AdminClientDetail from "@/pages/admin/AdminClientDetail";
 import AdminServicesCatalogue from "@/pages/admin/AdminServicesCatalogue";
@@ -21,6 +22,7 @@ const Admin = () => (
         <AdminHeader />
         <main className="flex-1 overflow-y-auto">
           <Routes>
+            <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="clients" element={<AdminClients />} />
             <Route path="clients/:clientId" element={<AdminClientDetail />} />
             <Route path="appointments" element={<AdminAppointments />} />
@@ -30,7 +32,7 @@ const Admin = () => (
             <Route path="breach-procedure" element={<SuperadminRoute><AdminBreachProcedure /></SuperadminRoute>} />
             <Route path="admins" element={<SuperadminRoute><AdminManagement /></SuperadminRoute>} />
             <Route path="surveys" element={<SuperadminRoute><AdminSurveys /></SuperadminRoute>} />
-            <Route path="*" element={<Navigate to="/admin/clients" replace />} />
+            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>
         </main>
       </div>
