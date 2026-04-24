@@ -1,4 +1,6 @@
-import { useProfile } from "@/hooks/useProfile";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Briefcase,
   BookOpen,
@@ -13,10 +15,23 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const { profile } = useProfile();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const firstName = profile?.first_name ?? "";
-  const nif = profile?.nif ?? null;
+  const [firstName, setFirstName] = useState("");
+  const [nif, setNif] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("first_name, nif")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.first_name) setFirstName(data.first_name);
+        if (data?.nif) setNif(data.nif);
+      });
+  }, [user]);
 
   const greeting = () => {
     const h = new Date().getHours();
