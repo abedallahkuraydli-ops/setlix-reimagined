@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Briefcase, CreditCard, Loader2, Plus } from "lucide-react";
+import { Briefcase, Loader2, Plus, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,8 +8,6 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ContractBanner } from "@/components/portal/ContractBanner";
 import { useContractStatus } from "@/hooks/useContractStatus";
-import { EmbeddedCheckoutDialog } from "@/components/payments/EmbeddedCheckoutDialog";
-import { useToast } from "@/hooks/use-toast";
 
 interface ClientServiceRow {
   id: string;
