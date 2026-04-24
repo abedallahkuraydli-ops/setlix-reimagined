@@ -44,6 +44,8 @@ const Dashboard = () => {
   const [completedCount, setCompletedCount] = useState(0);
   const [documentsCount, setDocumentsCount] = useState(0);
   const [pendingRequests, setPendingRequests] = useState<DocRequest[]>([]);
+  const [billingSummary, setBillingSummary] = useState<BillingSummary | null>(null);
+  const [billingNextDue, setBillingNextDue] = useState<string | null>(null);
 
   // Load profile
   useEffect(() => {
@@ -61,13 +63,13 @@ const Dashboard = () => {
       });
   }, [user]);
 
-  // Load counts + pending document requests
+  // Load counts + pending document requests + billing
   useEffect(() => {
     if (!user || !profileId) return;
     let cancelled = false;
 
     const load = async () => {
-      const [services, docs, requests] = await Promise.all([
+      const [services, docs, requests, billingData] = await Promise.all([
         supabase
           .from("client_services")
           .select("status")
@@ -82,6 +84,7 @@ const Dashboard = () => {
           .eq("client_id", profileId)
           .is("uploaded_at", null)
           .order("created_at", { ascending: false }),
+        loadBillingForClient(profileId),
       ]);
 
       if (cancelled) return;
@@ -91,6 +94,17 @@ const Dashboard = () => {
       setCompletedCount(statuses.filter((s) => s === "completed").length);
       setDocumentsCount(docs.count ?? 0);
       setPendingRequests((requests.data ?? []) as DocRequest[]);
+
+      // Auto-apply elapsed late-fee periods (no-op for clients who lack RLS update;
+      // RLS prevents it for clients, so this only succeeds for admins viewing this UI.
+      // The compute still reflects whatever is stored.)
+      let billing: BillingRow | null = billingData.billing;
+      if (billing) {
+        const updated = await applyDueLateFees(profileId, billing).catch(() => null);
+        if (updated) billing = updated;
+      }
+      setBillingNextDue(billing?.next_payment_due_at ?? null);
+      setBillingSummary(computeBilling(billingData.services, billing, billingData.payments));
     };
 
     load();
@@ -101,6 +115,8 @@ const Dashboard = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${profileId}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "documents", filter: `user_id=eq.${user.id}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "document_requests", filter: `client_id=eq.${profileId}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_billing", filter: `client_id=eq.${profileId}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_payments", filter: `client_id=eq.${profileId}` }, load)
       .subscribe();
 
     return () => {
