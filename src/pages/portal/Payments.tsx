@@ -208,9 +208,7 @@ const Payments = () => {
                       </p>
                     </div>
                     <div className="text-sm font-semibold text-foreground">{fmt(inv.amount_cents, inv.currency)}</div>
-                    <Button size="sm" onClick={() => handlePay(inv.id)}>
-                      <CreditCard className="h-4 w-4 mr-1" /> Pay
-                    </Button>
+                    <Badge variant="outline" className="text-[10px]">Bank transfer</Badge>
                   </div>
                 ))}
               </div>
@@ -251,14 +249,6 @@ const Payments = () => {
         </>
       )}
 
-      <EmbeddedCheckoutDialog
-        invoiceId={activeInvoiceId}
-        open={checkoutOpen}
-        onOpenChange={(open) => {
-          setCheckoutOpen(open);
-          if (!open) setActiveInvoiceId(null);
-        }}
-      />
     </div>
   );
 };
