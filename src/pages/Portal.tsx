@@ -40,40 +40,44 @@ const Portal = () => {
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (roleLoading || !user) return;
+    if (!user) return;
 
-    if (isAdmin) {
-      navigate("/admin", { replace: true });
-      return;
-    }
-
+    // Kick off onboarding check immediately in parallel with role resolution
     let cancelled = false;
-    const checkOnboarding = async () => {
+    (async () => {
       const { data } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (cancelled) return;
 
       const completed = data?.onboarding_completed ?? false;
       setOnboardingCompleted(completed);
       setCheckingOnboarding(false);
+    })();
 
-      const path = window.location.pathname;
-      if (path === "/portal" || path === "/portal/") {
-        navigate(completed ? "/portal/dashboard" : "/portal/onboarding", { replace: true });
-      } else if (!completed && path !== "/portal/onboarding") {
-        navigate("/portal/onboarding", { replace: true });
-      }
-    };
-
-    checkOnboarding();
     return () => {
       cancelled = true;
     };
-  }, [user, isAdmin, roleLoading, navigate]);
+  }, [user]);
+
+  useEffect(() => {
+    if (roleLoading || !user) return;
+    if (isAdmin) {
+      navigate("/admin", { replace: true });
+      return;
+    }
+    if (onboardingCompleted === null) return;
+
+    const path = window.location.pathname;
+    if (path === "/portal" || path === "/portal/") {
+      navigate(onboardingCompleted ? "/portal/dashboard" : "/portal/onboarding", { replace: true });
+    } else if (!onboardingCompleted && path !== "/portal/onboarding") {
+      navigate("/portal/onboarding", { replace: true });
+    }
+  }, [user, isAdmin, roleLoading, navigate, onboardingCompleted]);
 
   if (roleLoading || checkingOnboarding) {
     return (
