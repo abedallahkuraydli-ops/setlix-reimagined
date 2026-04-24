@@ -151,8 +151,8 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
     }
   };
 
-  const updateStatus = async (id: string, status: string) => {
-    const patch: Record<string, unknown> = { status };
+  const updateStatus = async (id: string, status: "paid" | "cancelled" | "pending") => {
+    const patch: { status: typeof status; paid_at?: string } = { status };
     if (status === "paid") patch.paid_at = new Date().toISOString();
     const { error } = await supabase.from("invoices").update(patch).eq("id", id);
     if (error) toast({ title: "Update failed", description: error.message, variant: "destructive" });
