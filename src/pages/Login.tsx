@@ -306,7 +306,7 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {!isLogin && (passwordFocused || password.length > 0) && (
+              {(!isLogin || setupMode) && (passwordFocused || password.length > 0) && (
                 <div className="rounded-md border border-border bg-muted/50 p-3 space-y-1.5 animate-in fade-in slide-in-from-top-1">
                   <p className="text-xs font-medium text-foreground mb-2">Password must contain:</p>
                   {passwordChecks.map((check) => (
