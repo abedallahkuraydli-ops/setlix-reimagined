@@ -216,6 +216,96 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Payment reminder banner (3/2/1/0 days before due, or overdue) */}
+      {billingSummary && billingSummary.remainingCents > 0 && billingSummary.daysUntilDue !== null && billingSummary.daysUntilDue <= 3 && (
+        <div className={`rounded-xl border p-4 flex items-start gap-3 ${
+          billingSummary.isOverdue
+            ? "border-destructive/40 bg-destructive/10"
+            : billingSummary.daysUntilDue === 0
+              ? "border-amber-400/60 bg-amber-50 dark:bg-amber-950/20"
+              : "border-primary/30 bg-primary/5"
+        }`}>
+          <CalendarClock className={`h-5 w-5 mt-0.5 shrink-0 ${billingSummary.isOverdue ? "text-destructive" : "text-primary"}`} />
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-foreground">
+              {billingSummary.isOverdue
+                ? `Payment overdue by ${Math.abs(billingSummary.daysUntilDue)} day${Math.abs(billingSummary.daysUntilDue) === 1 ? "" : "s"}`
+                : billingSummary.daysUntilDue === 0
+                  ? "Payment is due today"
+                  : `Payment due in ${billingSummary.daysUntilDue} day${billingSummary.daysUntilDue === 1 ? "" : "s"}`}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {formatMoney(billingSummary.remainingCents, billingSummary.currency)} remaining
+              {billingNextDue ? ` • Due ${new Date(billingNextDue).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}
+              {billingSummary.lateFeeCents > 0 ? ` • Late fee applied: ${formatMoney(billingSummary.lateFeeCents, billingSummary.currency)}` : ""}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Billing summary card */}
+      {billingSummary && billingSummary.grandTotalCents > 0 && (
+        <div className="rounded-xl border border-border bg-card p-5 md:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Wallet className="h-5 w-5 text-primary" />
+            <h2 className="text-base font-semibold text-foreground">Billing summary</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Total price</p>
+              {billingSummary.hasDiscount ? (
+                <div className="mt-0.5">
+                  <p className="text-xs text-muted-foreground line-through">
+                    {formatMoney(billingSummary.servicesTotalCents, billingSummary.currency)}
+                  </p>
+                  <p className="text-lg font-bold text-emerald-600">
+                    {formatMoney(billingSummary.baseTotalCents, billingSummary.currency)}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-lg font-bold text-foreground mt-0.5">
+                  {formatMoney(billingSummary.baseTotalCents, billingSummary.currency)}
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Paid</p>
+              <p className="text-lg font-bold text-foreground mt-0.5">{formatMoney(billingSummary.paidCents, billingSummary.currency)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Remaining</p>
+              <p className="text-lg font-bold text-primary mt-0.5">{formatMoney(billingSummary.remainingCents, billingSummary.currency)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Next payment</p>
+              {billingNextDue ? (
+                <>
+                  <p className="text-sm font-semibold text-foreground mt-0.5">
+                    {new Date(billingNextDue).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                  {billingSummary.daysUntilDue !== null && (
+                    <p className={`text-xs mt-0.5 font-medium ${billingSummary.isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
+                      {billingSummary.isOverdue
+                        ? `Overdue by ${Math.abs(billingSummary.daysUntilDue)}d`
+                        : billingSummary.daysUntilDue === 0
+                          ? "Due today"
+                          : `${billingSummary.daysUntilDue} day${billingSummary.daysUntilDue === 1 ? "" : "s"} left`}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground mt-0.5">Not scheduled</p>
+              )}
+            </div>
+          </div>
+          {billingSummary.lateFeeCents > 0 && (
+            <p className="text-xs text-destructive mt-3">
+              Includes late payment fee of {formatMoney(billingSummary.lateFeeCents, billingSummary.currency)}.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat) => (
