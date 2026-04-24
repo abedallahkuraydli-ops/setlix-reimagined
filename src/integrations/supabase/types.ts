@@ -1203,6 +1203,202 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_answer_history: {
+        Row: {
+          answer_id: string
+          assignment_id: string
+          changed_at: string
+          changed_by_user_id: string | null
+          id: string
+          previous_answer: Json | null
+          question_id: string
+        }
+        Insert: {
+          answer_id: string
+          assignment_id: string
+          changed_at?: string
+          changed_by_user_id?: string | null
+          id?: string
+          previous_answer?: Json | null
+          question_id: string
+        }
+        Update: {
+          answer_id?: string
+          assignment_id?: string
+          changed_at?: string
+          changed_by_user_id?: string | null
+          id?: string
+          previous_answer?: Json | null
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_answer_history_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "survey_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_answers: {
+        Row: {
+          answer: Json | null
+          assignment_id: string
+          created_at: string
+          id: string
+          question_id: string
+          updated_at: string
+          updated_by_user_id: string | null
+        }
+        Insert: {
+          answer?: Json | null
+          assignment_id: string
+          created_at?: string
+          id?: string
+          question_id: string
+          updated_at?: string
+          updated_by_user_id?: string | null
+        }
+        Update: {
+          answer?: Json | null
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+          updated_at?: string
+          updated_by_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_answers_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "survey_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by_user_id: string | null
+          client_profile_id: string
+          id: string
+          template_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by_user_id?: string | null
+          client_profile_id: string
+          id?: string
+          template_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by_user_id?: string | null
+          client_profile_id?: string
+          id?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_assignments_client_profile_id_fkey"
+            columns: ["client_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_assignments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "survey_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_questions: {
+        Row: {
+          created_at: string
+          id: string
+          options: Json
+          position: number
+          question_text: string
+          question_type: Database["public"]["Enums"]["survey_question_type"]
+          required: boolean
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          options?: Json
+          position?: number
+          question_text: string
+          question_type: Database["public"]["Enums"]["survey_question_type"]
+          required?: boolean
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          options?: Json
+          position?: number
+          question_text?: string
+          question_type?: Database["public"]["Enums"]["survey_question_type"]
+          required?: boolean
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_questions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "survey_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by_user_id: string | null
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       unauthorised_download_attempts: {
         Row: {
           acknowledged: boolean
@@ -1399,6 +1595,12 @@ export type Database = {
         | "in_progress"
         | "awaiting_client"
         | "completed"
+      survey_question_type:
+        | "short_text"
+        | "long_text"
+        | "single_choice"
+        | "multiple_choice"
+        | "yes_no"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1574,6 +1776,13 @@ export const Constants = {
         "in_progress",
         "awaiting_client",
         "completed",
+      ],
+      survey_question_type: [
+        "short_text",
+        "long_text",
+        "single_choice",
+        "multiple_choice",
+        "yes_no",
       ],
     },
   },
