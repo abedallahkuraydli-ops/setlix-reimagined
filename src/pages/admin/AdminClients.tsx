@@ -76,9 +76,18 @@ const AdminClients = () => {
 
   useEffect(() => {
     const fetchClients = async () => {
+      // Exclude staff (admin/superadmin) accounts from the clients list —
+      // @setlix.pt signups are auto-promoted to superadmin and should never
+      // appear here, even though a profile row is created for every auth user.
+      const { data: staffRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "superadmin"]);
+      const staffUserIds = new Set((staffRoles || []).map((r: any) => r.user_id));
+
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, created_at, updated_at, lifecycle_status")
+        .select("id, user_id, full_name, created_at, updated_at, lifecycle_status")
         .order("created_at", { ascending: false });
 
       const { data: services } = await supabase
@@ -87,7 +96,9 @@ const AdminClients = () => {
 
       if (!profiles) { setLoading(false); return; }
 
-      const mapped: ClientRow[] = profiles.map((p: any) => {
+      const clientProfiles = profiles.filter((p: any) => !staffUserIds.has(p.user_id));
+
+      const mapped: ClientRow[] = clientProfiles.map((p: any) => {
         const lifecycleStatus = (p.lifecycle_status || "active") as Lifecycle;
         const clientServices = (services || []).filter((s: any) => s.client_id === p.id);
 
