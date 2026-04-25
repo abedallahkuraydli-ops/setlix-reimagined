@@ -145,6 +145,14 @@ export const AdminBillingSection = ({ clientId }: Props) => {
     setPayNote("");
     setPayDate(new Date());
     toast({ title: "Payment recorded" });
+    notifyClientOfChange({
+      clientProfileId: clientId,
+      type: "payment_recorded",
+      title: "Payment recorded on your account",
+      body: `A payment of €${(cents / 100).toFixed(2)} was recorded on ${format(payDate, "PPP")}.`,
+      linkPath: "/portal/dashboard",
+      emailTemplateData: { amount: (cents / 100).toFixed(2), currency: "EUR", paidAt: payDate.toISOString() },
+    });
     refresh();
   };
 
