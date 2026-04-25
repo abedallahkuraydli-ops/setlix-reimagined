@@ -230,9 +230,22 @@ const AdminClientDetail = () => {
     if (field === "status" && typeof value === "string" && value in STATUS_PROGRESS) {
       updateData.progress_percentage = STATUS_PROGRESS[value as ServiceStatus];
     }
+    const svc = services.find((s) => s.id === serviceId);
     const { error } = await supabase.from("client_services").update(updateData as any).eq("id", serviceId);
     if (error) toast({ title: "Update failed", variant: "destructive" });
-    else fetchAll();
+    else {
+      if (field === "status" && profile && svc) {
+        const label = statusOptions.find((o) => o.value === value)?.label || String(value);
+        notifyClientOfChange({
+          clientProfileId: profile.id,
+          type: "service_status_changed",
+          title: `Service status updated: ${svc.service_catalogue?.name ?? ""}`,
+          body: `Your service "${svc.service_catalogue?.name ?? ""}" is now: ${label}.`,
+          linkPath: "/portal/services",
+        });
+      }
+      fetchAll();
+    }
   };
 
   const addServices = async () => {
@@ -244,6 +257,16 @@ const AdminClientDetail = () => {
     const { error } = await supabase.from("client_services").insert(inserts);
     if (error) toast({ title: "Failed to add service", description: error.message, variant: "destructive" });
     else {
+      const names = catalogue.filter((c) => selectedCatalogueIds.includes(c.id)).map((c) => c.name);
+      if (profile) {
+        notifyClientOfChange({
+          clientProfileId: profile.id,
+          type: "service_added",
+          title: names.length === 1 ? `New service added: ${names[0]}` : `${names.length} new services added`,
+          body: `Setlix has added the following service${names.length === 1 ? "" : "s"} to your account: ${names.join(", ")}.`,
+          linkPath: "/portal/services",
+        });
+      }
       toast({ title: "Service(s) added" });
       setAddServiceOpen(false);
       setSelectedCatalogueIds([]);
@@ -269,7 +292,17 @@ const AdminClientDetail = () => {
   };
 
   const removeService = async (id: string) => {
+    const svc = services.find((s) => s.id === id);
     await supabase.from("client_services").delete().eq("id", id);
+    if (profile && svc) {
+      notifyClientOfChange({
+        clientProfileId: profile.id,
+        type: "service_removed",
+        title: `Service removed: ${svc.service_catalogue?.name ?? ""}`,
+        body: `The service "${svc.service_catalogue?.name ?? ""}" has been removed from your account.`,
+        linkPath: "/portal/services",
+      });
+    }
     toast({ title: "Service removed" });
     fetchAll();
   };
@@ -285,6 +318,15 @@ const AdminClientDetail = () => {
     });
     if (error) toast({ title: "Failed", description: error.message, variant: "destructive" });
     else {
+      if (profile) {
+        notifyClientOfChange({
+          clientProfileId: profile.id,
+          type: "document_requested",
+          title: `New document requested: ${newDocName.trim()}`,
+          body: newDocDesc.trim() || `Setlix is requesting "${newDocName.trim()}". Please upload it from your portal.`,
+          linkPath: "/portal/documents",
+        });
+      }
       toast({ title: "Document request created" });
       setAddDocOpen(false);
       setNewDocName("");
@@ -296,7 +338,17 @@ const AdminClientDetail = () => {
   };
 
   const deleteDocRequest = async (id: string) => {
+    const dr = docRequests.find((d) => d.id === id);
     await supabase.from("document_requests").delete().eq("id", id);
+    if (profile && dr) {
+      notifyClientOfChange({
+        clientProfileId: profile.id,
+        type: "document_deleted",
+        title: `Document request removed: ${dr.document_name}`,
+        body: `The request for "${dr.document_name}" has been removed.`,
+        linkPath: "/portal/documents",
+      });
+    }
     toast({ title: "Document request deleted" });
     fetchAll();
   };
