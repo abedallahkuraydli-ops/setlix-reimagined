@@ -151,32 +151,36 @@ const Onboarding = () => {
       await supabase.from("client_services").insert(inserts);
     }
 
-    // Notify Setlix team of the new client signup (fire-and-forget)
-    try {
-      const selectedServiceNames = catalogue
-        .filter((s) => selectedServiceIds.includes(s.id))
-        .map((s) => s.name);
-      await supabase.functions.invoke("send-transactional-email", {
-        body: {
-          templateName: "new-client-signup",
-          recipientEmail: "info@setlix.pt",
-          idempotencyKey: `new-client-signup-${user.id}`,
-          templateData: {
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            email: user.email,
-            phone,
-            nationality,
-            nif: nif.replace(/\s/g, "") || undefined,
-            dateOfBirth: dob ? format(dob, "yyyy-MM-dd") : undefined,
-            services: selectedServiceNames,
-            signedUpAt: new Date().toISOString(),
+    // Notify Setlix team of the new client signup (fire-and-forget).
+    // Skip for @setlix.pt internal staff accounts — they're not clients.
+    const isStaffEmail = (user.email || "").toLowerCase().endsWith("@setlix.pt");
+    if (!isStaffEmail) {
+      try {
+        const selectedServiceNames = catalogue
+          .filter((s) => selectedServiceIds.includes(s.id))
+          .map((s) => s.name);
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "new-client-signup",
+            recipientEmail: "info@setlix.pt",
+            idempotencyKey: `new-client-signup-${user.id}`,
+            templateData: {
+              firstName: firstName.trim(),
+              lastName: lastName.trim(),
+              email: user.email,
+              phone,
+              nationality,
+              nif: nif.replace(/\s/g, "") || undefined,
+              dateOfBirth: dob ? format(dob, "yyyy-MM-dd") : undefined,
+              services: selectedServiceNames,
+              signedUpAt: new Date().toISOString(),
+            },
           },
-        },
-      });
-    } catch (e) {
-      // Don't block onboarding completion on email failure
-      console.error("Failed to send new client signup notification", e);
+        });
+      } catch (e) {
+        // Don't block onboarding completion on email failure
+        console.error("Failed to send new client signup notification", e);
+      }
     }
 
     setLoading(false);

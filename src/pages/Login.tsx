@@ -203,6 +203,18 @@ const Login = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Block @setlix.pt from the public signup form — these are internal/staff
+    // accounts that must use the superadmin setup flow, not the client signup.
+    if (email.trim().toLowerCase().endsWith("@setlix.pt")) {
+      toast({
+        title: "Use the staff sign-in",
+        description:
+          "@setlix.pt accounts are internal staff accounts. Please switch to Log In and use your @setlix.pt email — you'll be set up automatically with admin access.",
+        variant: "destructive",
+      });
+      setIsLogin(true);
+      return;
+    }
     if (password !== confirmPassword) {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
