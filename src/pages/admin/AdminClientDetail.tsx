@@ -589,6 +589,9 @@ const AdminClientDetail = () => {
       {/* Invoices & Payments */}
       <AdminInvoicesSection clientId={profile.id} clientUserId={profile.user_id} />
 
+      {/* Pending Service Requests */}
+      <AdminPendingRequestsSection clientId={profile.id} onChanged={fetchAll} />
+
       <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">Services</h2>
