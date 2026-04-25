@@ -50,15 +50,17 @@ export async function notifyClientOfChange({
       profile.full_name || profile.first_name || "there";
 
     // Insert in-portal notification
-    await supabase.from("notifications").insert({
-      recipient_user_id: recipientUserId,
-      audience: "client",
-      type,
-      title,
-      body,
-      link_path: linkPath ?? null,
-      metadata: metadata ?? null,
-    });
+    await supabase.from("notifications").insert([
+      {
+        recipient_user_id: recipientUserId,
+        audience: "client",
+        type,
+        title,
+        body,
+        link_path: linkPath ?? null,
+        metadata: metadata ?? null,
+      },
+    ]);
 
     // Look up client email from auth.users via admin? Not available client-side.
     // Use the service request notification pattern: invoke the email function
