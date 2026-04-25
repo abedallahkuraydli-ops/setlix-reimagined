@@ -38,15 +38,32 @@ export const AdminPendingRequestsSection = ({ clientId, onChanged }: Props) => {
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data: rs, error } = await supabase
       .from("service_requests")
-      .select(
-        "id, client_id, service_catalogue_id, client_note, created_at, service_catalogue(name, category)"
-      )
+      .select("id, client_id, service_catalogue_id, client_note, created_at")
       .eq("client_id", clientId)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
-    setRequests((data as unknown as PendingRequest[]) || []);
+    if (error) {
+      console.error("Failed to load service requests", error);
+      setRequests([]);
+      setLoading(false);
+      return;
+    }
+    const ids = Array.from(new Set((rs || []).map((r) => r.service_catalogue_id)));
+    let catMap = new Map<string, { name: string; category: string }>();
+    if (ids.length > 0) {
+      const { data: cats } = await supabase
+        .from("service_catalogue")
+        .select("id, name, category")
+        .in("id", ids);
+      catMap = new Map((cats || []).map((c) => [c.id, { name: c.name, category: c.category }]));
+    }
+    const merged: PendingRequest[] = (rs || []).map((r) => ({
+      ...r,
+      service_catalogue: catMap.get(r.service_catalogue_id) || null,
+    }));
+    setRequests(merged);
     setLoading(false);
   }, [clientId]);
 
