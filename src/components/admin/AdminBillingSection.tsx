@@ -21,6 +21,7 @@ import {
   type PaymentRow,
   type ServicePriceRow,
 } from "@/lib/billing";
+import { notifyClientOfChange } from "@/lib/clientNotifications";
 
 interface Props {
   clientId: string;
