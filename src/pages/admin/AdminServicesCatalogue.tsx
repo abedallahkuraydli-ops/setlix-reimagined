@@ -59,6 +59,8 @@ const AdminServicesCatalogue = () => {
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [reqLoading, setReqLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<PendingRequest | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const fetchItems = async () => {
     const { data } = await supabase.from("service_catalogue").select("*").order("category").order("name");
