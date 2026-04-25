@@ -41,12 +41,12 @@ export const AdminPendingRequestsSection = ({ clientId, onChanged }: Props) => {
     const { data } = await supabase
       .from("service_requests")
       .select(
-        "id, client_id, service_catalogue_id, client_note, created_at, service_catalogue:service_catalogue_id(name, category)"
+        "id, client_id, service_catalogue_id, client_note, created_at, service_catalogue(name, category)"
       )
       .eq("client_id", clientId)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
-    setRequests((data as PendingRequest[]) || []);
+    setRequests((data as unknown as PendingRequest[]) || []);
     setLoading(false);
   }, [clientId]);
 
