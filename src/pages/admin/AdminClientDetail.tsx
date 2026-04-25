@@ -450,6 +450,13 @@ const AdminClientDetail = () => {
         file_name: file.name,
         metadata: { size: file.size, mime: file.type, sha256 },
       });
+      notifyClientOfChange({
+        clientProfileId: profile.id,
+        type: "document_uploaded",
+        title: "A new document was issued to you",
+        body: `"${file.name}" was uploaded to your account by an administrator.`,
+        linkPath: "/portal/dashboard",
+      });
       fetchAll();
     }
     setUploadingIssued(false);
