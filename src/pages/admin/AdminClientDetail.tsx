@@ -29,6 +29,7 @@ import { ALLOWED_EXTENSIONS, computeSha256, formatBytes, logAudit, validateFile 
 import { AdminContractSection } from "@/components/admin/AdminContractSection";
 import { AdminInvoicesSection } from "@/components/admin/AdminInvoicesSection";
 import { AdminBillingSection } from "@/components/admin/AdminBillingSection";
+import { AdminPendingRequestsSection } from "@/components/admin/AdminPendingRequestsSection";
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
 import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
 import { fetchAuthorisedDocIds, logUnauthorisedAttempt } from "@/lib/adminDownloads";
@@ -587,6 +588,9 @@ const AdminClientDetail = () => {
 
       {/* Invoices & Payments */}
       <AdminInvoicesSection clientId={profile.id} clientUserId={profile.user_id} />
+
+      {/* Pending Service Requests */}
+      <AdminPendingRequestsSection clientId={profile.id} onChanged={fetchAll} />
 
       <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
