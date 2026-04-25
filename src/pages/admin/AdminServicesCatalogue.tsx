@@ -99,19 +99,63 @@ const AdminServicesCatalogue = () => {
 
   useEffect(() => { fetchItems(); fetchRequests(); }, []);
 
-  const decide = async (id: string, status: "approved" | "rejected") => {
-    setActingId(id);
+  const approveRequest = async (r: PendingRequest) => {
+    setActingId(r.id);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("service_requests")
-      .update({ status, reviewed_by_admin_id: user?.id, reviewed_at: new Date().toISOString() })
-      .eq("id", id);
+      .update({ status: "approved", reviewed_by_admin_id: user?.id, reviewed_at: new Date().toISOString() })
+      .eq("id", r.id);
     setActingId(null);
     if (error) {
       toast({ title: "Action failed", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: status === "approved" ? "Request approved" : "Request rejected" });
+    toast({ title: "Request approved" });
+    notifyClientOfChange({
+      clientProfileId: r.client_id,
+      type: "service_request_approved",
+      title: "Your service request was approved",
+      body: `Your request for "${r.service_catalogue?.name || "the service"}" has been approved and added to your active services.`,
+      linkPath: "/portal/dashboard",
+    });
+    fetchRequests();
+  };
+
+  const submitReject = async () => {
+    if (!rejectTarget) return;
+    const reason = rejectReason.trim();
+    if (!reason) {
+      toast({ title: "Justification is required", variant: "destructive" });
+      return;
+    }
+    setActingId(rejectTarget.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("service_requests")
+      .update({
+        status: "rejected",
+        reviewed_by_admin_id: user?.id,
+        reviewed_at: new Date().toISOString(),
+        decision_note: reason,
+      })
+      .eq("id", rejectTarget.id);
+    setActingId(null);
+    if (error) {
+      toast({ title: "Action failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Request rejected" });
+    notifyClientOfChange({
+      clientProfileId: rejectTarget.client_id,
+      type: "service_request_rejected",
+      title: "Your service request was rejected",
+      body: `Your request for "${rejectTarget.service_catalogue?.name || "the service"}" was rejected. Reason: ${reason}`,
+      linkPath: "/portal/dashboard",
+      emailTemplateData: { rejectionReason: reason },
+    });
+    setRejectTarget(null);
+    setRejectReason("");
     fetchRequests();
   };
 
