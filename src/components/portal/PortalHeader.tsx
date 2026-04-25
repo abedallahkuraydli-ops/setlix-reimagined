@@ -1,8 +1,9 @@
-import { LogOut, Bell } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 const pageTitles: Record<string, string> = {
   "/portal/dashboard": "Dashboard",
