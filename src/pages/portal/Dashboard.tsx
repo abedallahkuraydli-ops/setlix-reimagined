@@ -15,6 +15,7 @@ import {
   CalendarClock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { NotificationsBanner } from "@/components/portal/NotificationsBanner";
 import {
   applyDueLateFees,
   computeBilling,
