@@ -88,7 +88,9 @@ const Catalogue = () => {
     if (!profileId) return;
     setSubmittingId(item.id);
     try {
+      const requestId = crypto.randomUUID();
       const { error } = await supabase.from("service_requests").insert({
+        id: requestId,
         client_id: profileId,
         service_catalogue_id: item.id,
         status: "pending",
@@ -98,6 +100,41 @@ const Catalogue = () => {
         return;
       }
       toast({ title: "Request sent", description: "Setlix will review and approve shortly." });
+
+      // Fire-and-forget internal notifications
+      (async () => {
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, first_name, last_name")
+            .eq("id", profileId)
+            .maybeSingle();
+          const clientName = profile?.full_name
+            || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ")
+            || undefined;
+          const templateData = {
+            clientName,
+            clientEmail: user?.email,
+            serviceName: item.name,
+            serviceCategory: item.category,
+            requestedAt: new Date().toISOString(),
+          };
+          const recipients = ["info@setlix.pt", "legal@setlix.pt"];
+          await Promise.all(recipients.map((to) =>
+            supabase.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "service-request-notification",
+                recipientEmail: to,
+                idempotencyKey: `service-request-${requestId}-${to}`,
+                templateData,
+              },
+            })
+          ));
+        } catch (e) {
+          console.error("Failed to send service request notification", e);
+        }
+      })();
+
       await refresh(profileId);
     } finally {
       setSubmittingId(null);
