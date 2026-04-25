@@ -21,6 +21,7 @@ import {
   type PaymentRow,
   type ServicePriceRow,
 } from "@/lib/billing";
+import { notifyClientOfChange } from "@/lib/clientNotifications";
 
 interface Props {
   clientId: string;
@@ -106,6 +107,13 @@ export const AdminBillingSection = ({ clientId }: Props) => {
     }
     setResetLateFees(false);
     toast({ title: "Billing updated" });
+    notifyClientOfChange({
+      clientProfileId: clientId,
+      type: "billing_updated",
+      title: "Your billing details were updated",
+      body: "An administrator updated your billing settings (total, due date, or late fee). View your bill in the portal for details.",
+      linkPath: "/portal/dashboard",
+    });
     refresh();
   };
 
@@ -137,6 +145,14 @@ export const AdminBillingSection = ({ clientId }: Props) => {
     setPayNote("");
     setPayDate(new Date());
     toast({ title: "Payment recorded" });
+    notifyClientOfChange({
+      clientProfileId: clientId,
+      type: "payment_recorded",
+      title: "Payment recorded on your account",
+      body: `A payment of €${(cents / 100).toFixed(2)} was recorded on ${format(payDate, "PPP")}.`,
+      linkPath: "/portal/dashboard",
+      emailTemplateData: { amount: (cents / 100).toFixed(2), currency: "EUR", paidAt: payDate.toISOString() },
+    });
     refresh();
   };
 

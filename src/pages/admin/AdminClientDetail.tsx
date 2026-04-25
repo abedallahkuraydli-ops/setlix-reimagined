@@ -450,6 +450,13 @@ const AdminClientDetail = () => {
         file_name: file.name,
         metadata: { size: file.size, mime: file.type, sha256 },
       });
+      notifyClientOfChange({
+        clientProfileId: profile.id,
+        type: "document_uploaded",
+        title: "A new document was issued to you",
+        body: `"${file.name}" was uploaded to your account by an administrator.`,
+        linkPath: "/portal/dashboard",
+      });
       fetchAll();
     }
     setUploadingIssued(false);
@@ -470,6 +477,15 @@ const AdminClientDetail = () => {
       file_name: doc.file_name,
     });
     toast({ title: "Document deleted" });
+    if (profile) {
+      notifyClientOfChange({
+        clientProfileId: profile.id,
+        type: "document_deleted",
+        title: "A document was removed from your account",
+        body: `"${doc.file_name}" was deleted by an administrator.`,
+        linkPath: "/portal/dashboard",
+      });
+    }
     fetchAll();
   };
 

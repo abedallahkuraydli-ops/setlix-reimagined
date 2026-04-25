@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { notifyClientOfChange } from "@/lib/clientNotifications";
 
 interface PendingRequest {
   id: string;
@@ -58,6 +59,8 @@ const AdminServicesCatalogue = () => {
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [reqLoading, setReqLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<PendingRequest | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const fetchItems = async () => {
     const { data } = await supabase.from("service_catalogue").select("*").order("category").order("name");
@@ -96,19 +99,63 @@ const AdminServicesCatalogue = () => {
 
   useEffect(() => { fetchItems(); fetchRequests(); }, []);
 
-  const decide = async (id: string, status: "approved" | "rejected") => {
-    setActingId(id);
+  const approveRequest = async (r: PendingRequest) => {
+    setActingId(r.id);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("service_requests")
-      .update({ status, reviewed_by_admin_id: user?.id, reviewed_at: new Date().toISOString() })
-      .eq("id", id);
+      .update({ status: "approved", reviewed_by_admin_id: user?.id, reviewed_at: new Date().toISOString() })
+      .eq("id", r.id);
     setActingId(null);
     if (error) {
       toast({ title: "Action failed", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: status === "approved" ? "Request approved" : "Request rejected" });
+    toast({ title: "Request approved" });
+    notifyClientOfChange({
+      clientProfileId: r.client_id,
+      type: "service_request_approved",
+      title: "Your service request was approved",
+      body: `Your request for "${r.service_catalogue?.name || "the service"}" has been approved and added to your active services.`,
+      linkPath: "/portal/dashboard",
+    });
+    fetchRequests();
+  };
+
+  const submitReject = async () => {
+    if (!rejectTarget) return;
+    const reason = rejectReason.trim();
+    if (!reason) {
+      toast({ title: "Justification is required", variant: "destructive" });
+      return;
+    }
+    setActingId(rejectTarget.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("service_requests")
+      .update({
+        status: "rejected",
+        reviewed_by_admin_id: user?.id,
+        reviewed_at: new Date().toISOString(),
+        decision_note: reason,
+      })
+      .eq("id", rejectTarget.id);
+    setActingId(null);
+    if (error) {
+      toast({ title: "Action failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Request rejected" });
+    notifyClientOfChange({
+      clientProfileId: rejectTarget.client_id,
+      type: "service_request_rejected",
+      title: "Your service request was rejected",
+      body: `Your request for "${rejectTarget.service_catalogue?.name || "the service"}" was rejected. Reason: ${reason}`,
+      linkPath: "/portal/dashboard",
+      emailTemplateData: { rejectionReason: reason },
+    });
+    setRejectTarget(null);
+    setRejectReason("");
     fetchRequests();
   };
 
@@ -287,14 +334,14 @@ const AdminServicesCatalogue = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => decide(r.id, "rejected")}
+                      onClick={() => { setRejectTarget(r); setRejectReason(""); }}
                       disabled={actingId === r.id}
                     >
                       <X className="h-4 w-4 mr-1" /> Reject
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => decide(r.id, "approved")}
+                      onClick={() => approveRequest(r)}
                       disabled={actingId === r.id}
                     >
                       {actingId === r.id ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
@@ -307,6 +354,36 @@ const AdminServicesCatalogue = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!rejectTarget} onOpenChange={(o) => { if (!o) { setRejectTarget(null); setRejectReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject service request</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Please provide a justification. The client will see this reason in their portal and email.
+            </p>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Reason for rejection (required)"
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRejectTarget(null); setRejectReason(""); }}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={submitReject}
+              disabled={!rejectReason.trim() || actingId === rejectTarget?.id}
+            >
+              {actingId === rejectTarget?.id ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+              Reject request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
