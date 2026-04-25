@@ -107,6 +107,13 @@ export const AdminBillingSection = ({ clientId }: Props) => {
     }
     setResetLateFees(false);
     toast({ title: "Billing updated" });
+    notifyClientOfChange({
+      clientProfileId: clientId,
+      type: "billing_updated",
+      title: "Your billing details were updated",
+      body: "An administrator updated your billing settings (total, due date, or late fee). View your bill in the portal for details.",
+      linkPath: "/portal/dashboard",
+    });
     refresh();
   };
 
