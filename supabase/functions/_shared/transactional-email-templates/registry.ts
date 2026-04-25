@@ -13,10 +13,12 @@ import { template as contactConfirmation } from './contact-confirmation.tsx'
 import { template as contactNotification } from './contact-notification.tsx'
 import { template as appointmentConfirmation } from './appointment-confirmation.tsx'
 import { template as newClientSignup } from './new-client-signup.tsx'
+import { template as serviceRequestNotification } from './service-request-notification.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-confirmation': contactConfirmation,
   'contact-notification': contactNotification,
   'appointment-confirmation': appointmentConfirmation,
   'new-client-signup': newClientSignup,
+  'service-request-notification': serviceRequestNotification,
 }
