@@ -477,6 +477,15 @@ const AdminClientDetail = () => {
       file_name: doc.file_name,
     });
     toast({ title: "Document deleted" });
+    if (profile) {
+      notifyClientOfChange({
+        clientProfileId: profile.id,
+        type: "document_deleted",
+        title: "A document was removed from your account",
+        body: `"${doc.file_name}" was deleted by an administrator.`,
+        linkPath: "/portal/dashboard",
+      });
+    }
     fetchAll();
   };
 
