@@ -58,7 +58,7 @@ export async function notifyClientOfChange({
         title,
         body,
         link_path: linkPath ?? null,
-        metadata: metadata ?? null,
+        metadata: (metadata ?? null) as never,
       },
     ]);
 
