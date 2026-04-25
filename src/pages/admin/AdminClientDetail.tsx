@@ -32,6 +32,7 @@ import { AdminBillingSection } from "@/components/admin/AdminBillingSection";
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
 import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
 import { fetchAuthorisedDocIds, logUnauthorisedAttempt } from "@/lib/adminDownloads";
+import { notifyClientOfChange } from "@/lib/clientNotifications";
 import type { Database } from "@/integrations/supabase/types";
 
 type ServiceStatus = Database["public"]["Enums"]["service_status"];
