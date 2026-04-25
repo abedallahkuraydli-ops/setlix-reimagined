@@ -354,6 +354,36 @@ const AdminServicesCatalogue = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!rejectTarget} onOpenChange={(o) => { if (!o) { setRejectTarget(null); setRejectReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject service request</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Please provide a justification. The client will see this reason in their portal and email.
+            </p>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Reason for rejection (required)"
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRejectTarget(null); setRejectReason(""); }}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={submitReject}
+              disabled={!rejectReason.trim() || actingId === rejectTarget?.id}
+            >
+              {actingId === rejectTarget?.id ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+              Reject request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
