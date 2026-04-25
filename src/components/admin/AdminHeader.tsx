@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { useNavigate } from "react-router-dom";
 import { UnauthorisedAlertsBell } from "./UnauthorisedAlertsBell";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 export function AdminHeader() {
   const { user, signOut } = useAuth();
