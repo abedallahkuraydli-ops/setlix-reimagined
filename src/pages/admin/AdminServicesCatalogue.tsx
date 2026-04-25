@@ -334,14 +334,14 @@ const AdminServicesCatalogue = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => decide(r.id, "rejected")}
+                      onClick={() => { setRejectTarget(r); setRejectReason(""); }}
                       disabled={actingId === r.id}
                     >
                       <X className="h-4 w-4 mr-1" /> Reject
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => decide(r.id, "approved")}
+                      onClick={() => approveRequest(r)}
                       disabled={actingId === r.id}
                     >
                       {actingId === r.id ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
