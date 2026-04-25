@@ -1,8 +1,9 @@
-import { LogOut, Bell } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 const pageTitles: Record<string, string> = {
   "/portal/dashboard": "Dashboard",
@@ -42,9 +43,7 @@ export function PortalHeader() {
         <h2 className="text-sm font-semibold text-foreground hidden sm:inline">{pageTitle}</h2>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
-          <Bell className="h-4 w-4" />
-        </Button>
+        <NotificationsBell />
         <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-border ml-1">
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
             <span className="text-xs font-bold text-primary-foreground">{initials}</span>

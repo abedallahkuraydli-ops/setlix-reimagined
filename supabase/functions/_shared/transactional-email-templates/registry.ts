@@ -14,6 +14,7 @@ import { template as contactNotification } from './contact-notification.tsx'
 import { template as appointmentConfirmation } from './appointment-confirmation.tsx'
 import { template as newClientSignup } from './new-client-signup.tsx'
 import { template as serviceRequestNotification } from './service-request-notification.tsx'
+import { template as clientAccountUpdate } from './client-account-update.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-confirmation': contactConfirmation,
@@ -21,4 +22,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'appointment-confirmation': appointmentConfirmation,
   'new-client-signup': newClientSignup,
   'service-request-notification': serviceRequestNotification,
+  'client-account-update': clientAccountUpdate,
 }

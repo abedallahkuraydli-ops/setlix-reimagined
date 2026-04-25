@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { useNavigate } from "react-router-dom";
 import { UnauthorisedAlertsBell } from "./UnauthorisedAlertsBell";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 export function AdminHeader() {
   const { user, signOut } = useAuth();
@@ -34,6 +35,7 @@ export function AdminHeader() {
         </Badge>
       </div>
       <div className="flex items-center gap-2">
+        <NotificationsBell />
         <UnauthorisedAlertsBell />
         <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-border ml-1">
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">

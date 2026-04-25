@@ -989,6 +989,45 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          audience: string
+          body: string | null
+          created_at: string
+          id: string
+          link_path: string | null
+          metadata: Json | null
+          read_at: string | null
+          recipient_user_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          link_path?: string | null
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_user_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          link_path?: string | null
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_user_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount_cents: number
@@ -1638,6 +1677,16 @@ export type Database = {
           message_id: number
           payload: Json
           source_queue: string
+        }
+        Returns: number
+      }
+      notify_superadmins: {
+        Args: {
+          _body: string
+          _link_path: string
+          _metadata: Json
+          _title: string
+          _type: string
         }
         Returns: number
       }
