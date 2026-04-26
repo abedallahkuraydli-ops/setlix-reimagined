@@ -13,6 +13,7 @@ import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminBreachProcedure from "@/pages/admin/AdminBreachProcedure";
 import AdminManagement from "@/pages/admin/AdminManagement";
 import AdminSurveys from "@/pages/admin/AdminSurveys";
+import AdminLockedAccounts from "@/pages/admin/AdminLockedAccounts";
 
 const Admin = () => (
   <SidebarProvider>
