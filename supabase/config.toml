@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.setup-superadmin]
 verify_jwt = false
+
+[functions.record-failed-login]
+verify_jwt = false
