@@ -18,7 +18,7 @@ const DataErasureEmail = ({
 }: DataErasureProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Data erasure request: {clientEmail || clientName}</Preview>
+    <Preview>{`Data erasure request: ${clientEmail || clientName || ''}`}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>GDPR Data Erasure Request</Heading>

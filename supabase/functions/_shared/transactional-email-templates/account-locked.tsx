@@ -18,7 +18,7 @@ const AccountLockedEmail = ({
 }: AccountLockedProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Account locked: {email}</Preview>
+    <Preview>{`Account locked: ${email || ''}`}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Client account locked</Heading>
