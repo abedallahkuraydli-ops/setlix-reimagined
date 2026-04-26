@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, Calendar, MessageSquare, Settings, Shield, ShieldCheck, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, Calendar, MessageSquare, Settings, Shield, ShieldCheck, ClipboardList, Lock } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
