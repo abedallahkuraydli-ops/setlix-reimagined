@@ -33,6 +33,7 @@ const Admin = () => (
             <Route path="breach-procedure" element={<SuperadminRoute><AdminBreachProcedure /></SuperadminRoute>} />
             <Route path="admins" element={<SuperadminRoute><AdminManagement /></SuperadminRoute>} />
             <Route path="surveys" element={<SuperadminRoute><AdminSurveys /></SuperadminRoute>} />
+            <Route path="locked-accounts" element={<SuperadminRoute><AdminLockedAccounts /></SuperadminRoute>} />
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>
         </main>
