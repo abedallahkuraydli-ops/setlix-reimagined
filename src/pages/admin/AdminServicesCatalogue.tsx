@@ -151,7 +151,7 @@ const AdminServicesCatalogue = () => {
       type: "service_request_rejected",
       title: "Your service request was rejected",
       body: `Your request for "${rejectTarget.service_catalogue?.name || "the service"}" was rejected. Reason: ${reason}`,
-      linkPath: "/portal/dashboard",
+      linkPath: "/portal/messages",
       emailTemplateData: { rejectionReason: reason },
     });
     setRejectTarget(null);
