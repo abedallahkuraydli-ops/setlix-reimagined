@@ -115,7 +115,12 @@ const Settings = () => {
       toast({ title: "Request failed", description: error.message, variant: "destructive" });
     } else {
       setPendingDeletion(true);
+      const reasonSent = deletionReason.trim();
       setDeletionReason("");
+      // Notify Setlix admins via email with compliance checklist
+      supabase.functions.invoke("notify-data-erasure", {
+        body: { user_id: user.id, reason: reasonSent || null },
+      }).catch((e) => console.error("notify-data-erasure failed", e));
       toast({
         title: "Deletion request submitted",
         description: "Our team will process your request within 30 days, as required by GDPR.",
