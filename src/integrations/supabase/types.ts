@@ -47,6 +47,45 @@ export type Database = {
         }
         Relationships: []
       }
+      account_lockouts: {
+        Row: {
+          email: string
+          failed_attempt_count: number
+          id: string
+          locked_at: string
+          notes: string | null
+          password_reset_required: boolean
+          reason: string
+          unlocked_at: string | null
+          unlocked_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          failed_attempt_count?: number
+          id?: string
+          locked_at?: string
+          notes?: string | null
+          password_reset_required?: boolean
+          reason?: string
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          failed_attempt_count?: number
+          id?: string
+          locked_at?: string
+          notes?: string | null
+          password_reset_required?: boolean
+          reason?: string
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_client_allocations: {
         Row: {
           admin_user_id: string
@@ -947,6 +986,30 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string
@@ -1614,6 +1677,7 @@ export type Database = {
           meet_link: string
         }[]
       }
+      count_recent_failed_logins: { Args: { _email: string }; Returns: number }
       current_profile_id: { Args: never; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -1641,6 +1705,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_super: { Args: { _user_id: string }; Returns: boolean }
+      is_email_locked: { Args: { _email: string }; Returns: boolean }
       is_setlix_admin: { Args: { _user_id: string }; Returns: boolean }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
       log_document_action:
