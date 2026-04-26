@@ -15,6 +15,8 @@ import { template as appointmentConfirmation } from './appointment-confirmation.
 import { template as newClientSignup } from './new-client-signup.tsx'
 import { template as serviceRequestNotification } from './service-request-notification.tsx'
 import { template as clientAccountUpdate } from './client-account-update.tsx'
+import { template as accountLocked } from './account-locked.tsx'
+import { template as dataErasureRequest } from './data-erasure-request.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-confirmation': contactConfirmation,
@@ -23,4 +25,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-client-signup': newClientSignup,
   'service-request-notification': serviceRequestNotification,
   'client-account-update': clientAccountUpdate,
+  'account-locked': accountLocked,
+  'data-erasure-request': dataErasureRequest,
 }
