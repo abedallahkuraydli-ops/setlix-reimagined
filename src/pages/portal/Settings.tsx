@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { User, Shield, Download, Trash2, FileLock2, FileCheck2 } from "lucide-react";
 import { listConsents, type ConsentRecord } from "@/lib/consent";
+import { buildClientDataExportZip } from "@/lib/dataExport";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -76,42 +77,24 @@ const Settings = () => {
     if (!user) return;
     setExporting(true);
     try {
-      const [profileRes, servicesRes, docsRes, docReqRes, conversationsRes, appointmentsRes, auditRes] =
-        await Promise.all([
-          supabase.from("profiles").select("*").eq("user_id", user.id),
-          supabase.from("client_services").select("*, service_catalogue(*)").eq("client_id", user.id),
-          supabase.from("documents").select("*").eq("user_id", user.id),
-          supabase.from("document_requests").select("*"),
-          supabase.from("conversations").select("*"),
-          supabase.from("appointments").select("*"),
-          supabase.from("document_audit_log").select("*").or(`actor_user_id.eq.${user.id},target_user_id.eq.${user.id}`),
-        ]);
-
-      const exportPayload = {
-        exported_at: new Date().toISOString(),
-        user: { id: user.id, email: user.email },
-        profile: profileRes.data,
-        services: servicesRes.data,
-        documents: docsRes.data,
-        document_requests: docReqRes.data,
-        conversations: conversationsRes.data,
-        appointments: appointmentsRes.data,
-        document_audit_log: auditRes.data,
-        gdpr_notice:
-          "This export contains all personal data Setlix holds about you, in compliance with GDPR Article 20 (right to data portability).",
-      };
-
-      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: "application/json" });
+      const blob = await buildClientDataExportZip({
+        userId: user.id,
+        userEmail: user.email ?? null,
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `setlix-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.download = `setlix-data-export-${new Date().toISOString().split("T")[0]}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast({ title: "Your data has been exported" });
+      toast({
+        title: "Your data export is ready",
+        description:
+          "ZIP includes your profile, survey responses, uploaded and Setlix-issued documents, and invoice PDFs.",
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Export failed";
       toast({ title: "Export failed", description: msg, variant: "destructive" });

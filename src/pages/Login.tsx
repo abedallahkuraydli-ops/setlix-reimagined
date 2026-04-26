@@ -127,6 +127,21 @@ const Login = () => {
       return;
     }
 
+    // Pre-check: is this account currently locked?
+    if (!isSuperadmin) {
+      const { data: locked } = await supabase.rpc("is_email_locked", { _email: trimmedEmail });
+      if (locked) {
+        setLoading(false);
+        toast({
+          title: "Account locked",
+          description:
+            "This account has been locked after too many failed login attempts. Please use 'Forgot password?' to reset it, then contact support if you still cannot sign in.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email: trimmedEmail,
       password,
@@ -157,6 +172,35 @@ const Login = () => {
 
     setLoading(false);
     if (error) {
+      // Record this failed attempt (skip for superadmin email)
+      if (!isSuperadmin && /invalid/i.test(error.message)) {
+        try {
+          const { data: lockoutResult } = await supabase.functions.invoke<{
+            locked: boolean;
+            failed_attempts: number;
+            remaining: number;
+          }>("record-failed-login", { body: { email: trimmedEmail } });
+          if (lockoutResult?.locked) {
+            toast({
+              title: "Account locked",
+              description:
+                "Too many failed login attempts. Your account has been locked. Please use 'Forgot password?' to reset it, then contact support.",
+              variant: "destructive",
+            });
+            return;
+          }
+          if (lockoutResult && lockoutResult.remaining <= 2) {
+            toast({
+              title: "Login failed",
+              description: `${error.message}. ${lockoutResult.remaining} attempt${lockoutResult.remaining === 1 ? "" : "s"} remaining before account lock.`,
+              variant: "destructive",
+            });
+            return;
+          }
+        } catch (e) {
+          console.error("record-failed-login failed", e);
+        }
+      }
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
     } else {
       navigate(isSuperadmin ? "/admin" : "/portal");

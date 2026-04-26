@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { notifyClientOfChange } from "@/lib/clientNotifications";
+import { postAdminMessageToClient } from "@/lib/adminMessaging";
 
 interface PendingRequest {
   id: string;
@@ -103,13 +104,19 @@ export const AdminPendingRequestsSection = ({ clientId, onChanged }: Props) => {
       return;
     }
     toast({ title: "Request approved" });
+    const serviceName = r.service_catalogue?.name || "the requested service";
     notifyClientOfChange({
       clientProfileId: r.client_id,
       type: "service_request_approved",
       title: "Your service request was approved",
-      body: `Your request for "${r.service_catalogue?.name || "the service"}" has been approved and added to your active services.`,
+      body: `Your request for "${serviceName}" has been approved and added to your active services.`,
       linkPath: "/portal/dashboard",
     });
+    postAdminMessageToClient(
+      r.client_id,
+      `✅ Your request for "${serviceName}" has been approved. We've added it to your active services and will be in touch shortly with next steps. Reply here if you have any questions.`,
+      "Service request: " + serviceName,
+    );
     fetchRequests();
     onChanged?.();
   };
@@ -138,14 +145,20 @@ export const AdminPendingRequestsSection = ({ clientId, onChanged }: Props) => {
       return;
     }
     toast({ title: "Request rejected" });
+    const serviceName = rejectTarget.service_catalogue?.name || "the requested service";
     notifyClientOfChange({
       clientProfileId: rejectTarget.client_id,
       type: "service_request_rejected",
       title: "Your service request was rejected",
-      body: `Your request for "${rejectTarget.service_catalogue?.name || "the service"}" was rejected. Reason: ${reason}`,
-      linkPath: "/portal/dashboard",
+      body: `Your request for "${serviceName}" was rejected. Reason: ${reason}`,
+      linkPath: "/portal/messages",
       emailTemplateData: { rejectionReason: reason },
     });
+    postAdminMessageToClient(
+      rejectTarget.client_id,
+      `❌ Unfortunately we cannot proceed with your request for "${serviceName}" at this time.\n\nReason: ${reason}\n\nIf you'd like to discuss this further or provide additional information, please reply here and we'll be happy to help.`,
+      "Service request: " + serviceName,
+    );
     setRejectTarget(null);
     setRejectReason("");
     fetchRequests();
