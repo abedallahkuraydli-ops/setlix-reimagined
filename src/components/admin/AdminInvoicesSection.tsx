@@ -44,6 +44,8 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [vatRate, setVatRate] = useState("23");
+  const [discountPct, setDiscountPct] = useState("0");
+  const [clientDefaultDiscount, setClientDefaultDiscount] = useState(0);
   const [notes, setNotes] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -60,12 +62,23 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
 
   useEffect(() => {
     fetchInvoices();
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("default_discount_percentage")
+        .eq("id", clientId)
+        .maybeSingle();
+      const pct = Number((data as any)?.default_discount_percentage ?? 0);
+      setClientDefaultDiscount(pct);
+      setDiscountPct(String(pct));
+    })();
   }, [clientId]);
 
   const resetForm = () => {
     setDescription("");
     setAmount("");
     setVatRate("23");
+    setDiscountPct(String(clientDefaultDiscount));
     setNotes("");
     if (fileRef.current) fileRef.current.value = "";
   };
