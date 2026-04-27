@@ -258,7 +258,14 @@ const AdminClients = () => {
                   className="hover:bg-muted/30 cursor-pointer transition-colors"
                 >
                   <td className="p-4 font-medium text-foreground">
-                    <div>{row.fullName}</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span>{row.fullName}</span>
+                      {row.isSample && (
+                        <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 text-[10px] px-1.5 py-0">
+                          Sample
+                        </Badge>
+                      )}
+                    </div>
                     {row.servicesCount > 0 && (
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {row.servicesCount} service{row.servicesCount !== 1 ? "s" : ""}
