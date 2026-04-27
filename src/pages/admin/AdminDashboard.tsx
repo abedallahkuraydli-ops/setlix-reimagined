@@ -59,6 +59,9 @@ const AdminDashboard = () => {
   const [pendingAppts, setPendingAppts] = useState(0);
   const [unreadConversations, setUnreadConversations] = useState(0);
   const [unansweredConversations, setUnansweredConversations] = useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<
+    { month: string; invoiced: number; received: number }[]
+  >([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,13 +69,14 @@ const AdminDashboard = () => {
     const load = async () => {
       setLoading(true);
 
-      // 1) Client lifecycle counts
+      // 1) Client lifecycle counts (excluding sample clients)
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, lifecycle_status");
+        .select("id, lifecycle_status, is_sample");
 
       const counts = { active: 0, completed: 0, deleted: 0 };
       (profiles || []).forEach((p: any) => {
+        if (p.is_sample) return;
         const ls = (p.lifecycle_status || "active") as keyof typeof counts;
         if (counts[ls] !== undefined) counts[ls] += 1;
       });
