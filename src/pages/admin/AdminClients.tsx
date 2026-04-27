@@ -88,7 +88,7 @@ const AdminClients = () => {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, user_id, full_name, created_at, updated_at, lifecycle_status")
+        .select("id, user_id, full_name, created_at, updated_at, lifecycle_status, is_sample")
         .order("created_at", { ascending: false });
 
       const { data: services } = await supabase
@@ -102,6 +102,7 @@ const AdminClients = () => {
       const mapped: ClientRow[] = clientProfiles.map((p: any) => {
         const lifecycleStatus = (p.lifecycle_status || "active") as Lifecycle;
         const clientServices = (services || []).filter((s: any) => s.client_id === p.id);
+        const isSample = !!p.is_sample;
 
         if (clientServices.length === 0) {
           return {
@@ -112,6 +113,7 @@ const AdminClients = () => {
             overallProgress: 0,
             updatedAt: p.updated_at || p.created_at,
             lifecycleStatus,
+            isSample,
           };
         }
 
@@ -136,6 +138,7 @@ const AdminClients = () => {
           overallProgress,
           updatedAt: new Date(latestUpdate).toISOString(),
           lifecycleStatus,
+          isSample,
         };
       });
 
