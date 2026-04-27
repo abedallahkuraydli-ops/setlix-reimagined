@@ -27,6 +27,7 @@ interface ClientRow {
   overallProgress: number;
   updatedAt: string;
   lifecycleStatus: Lifecycle;
+  isSample: boolean;
 }
 
 const statusColors: Record<string, string> = {
