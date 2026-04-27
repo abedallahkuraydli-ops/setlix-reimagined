@@ -517,7 +517,7 @@ const AdminClientDetail = () => {
 
       <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h2 className="text-lg font-semibold text-foreground">Client Profile</h2>
             <Badge
               variant={profile.lifecycle_status === "completed" ? "default" : "secondary"}
@@ -525,6 +525,16 @@ const AdminClientDetail = () => {
             >
               {profile.lifecycle_status === "completed" ? "Completed" : "In the Works"}
             </Badge>
+            {profile.is_sample && (
+              <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50">
+                Sample client
+              </Badge>
+            )}
+            {profile.default_discount_percentage && profile.default_discount_percentage > 0 ? (
+              <Badge variant="outline" className="border-emerald-300 text-emerald-700 bg-emerald-50">
+                {Number(profile.default_discount_percentage)}% discount
+              </Badge>
+            ) : null}
           </div>
           {profile.lifecycle_status === "completed" ? (
             <Button variant="outline" size="sm" onClick={() => setLifecycle("active")}>
