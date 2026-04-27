@@ -586,6 +586,58 @@ const AdminClientDetail = () => {
           <Field label="Signed Up" value={new Date(profile.created_at).toLocaleDateString("en-GB")} />
           <Field label="Onboarding" value={profile.onboarding_completed ? "Completed ✓" : "Pending"} />
         </div>
+
+        {isSuperadmin && (
+          <div className="mt-6 pt-6 border-t border-border space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">Superadmin tools</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between gap-4 p-3 border border-border rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium">Sample client</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Test-run client. Excluded from dashboard counts and revenue metrics.
+                  </p>
+                </div>
+                <Switch
+                  checked={!!profile.is_sample}
+                  onCheckedChange={async (checked) => {
+                    const { error } = await supabase
+                      .from("profiles")
+                      .update({ is_sample: checked } as any)
+                      .eq("id", profile.id);
+                    if (error) toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+                    else { toast({ title: checked ? "Marked as sample client" : "Removed sample flag" }); fetchAll(); }
+                  }}
+                />
+              </div>
+              <div className="p-3 border border-border rounded-lg">
+                <Label htmlFor="discount-pct" className="text-sm font-medium">Default invoice discount (%)</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-2">
+                  Pre-applied when issuing new invoices. Client only sees this if greater than 0.
+                </p>
+                <Input
+                  id="discount-pct"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  defaultValue={profile.default_discount_percentage ?? 0}
+                  onBlur={async (e) => {
+                    const pct = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
+                    if (pct === (profile.default_discount_percentage ?? 0)) return;
+                    const { error } = await supabase
+                      .from("profiles")
+                      .update({ default_discount_percentage: pct } as any)
+                      .eq("id", profile.id);
+                    if (error) toast({ title: "Failed to update discount", description: error.message, variant: "destructive" });
+                    else { toast({ title: `Discount set to ${pct}%` }); fetchAll(); }
+                  }}
+                  className="h-9"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Contract */}
