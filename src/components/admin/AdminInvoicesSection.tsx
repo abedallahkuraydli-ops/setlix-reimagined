@@ -299,6 +299,38 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
               </div>
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="inv-discount">
+                Discount %
+                {clientDefaultDiscount > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground font-normal">
+                    (client default: {clientDefaultDiscount}%)
+                  </span>
+                )}
+              </Label>
+              <Input
+                id="inv-discount"
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={discountPct}
+                onChange={(e) => setDiscountPct(e.target.value)}
+              />
+              {(() => {
+                const gross = parseFloat(amount) || 0;
+                const pct = Math.max(0, Math.min(100, parseFloat(discountPct) || 0));
+                if (gross > 0 && pct > 0) {
+                  const net = gross * (1 - pct / 100);
+                  return (
+                    <p className="text-xs text-muted-foreground">
+                      Net: {fmt(Math.round(net * 100), "EUR")} (saving {fmt(Math.round((gross - net) * 100), "EUR")})
+                    </p>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="inv-notes">Internal notes (optional)</Label>
               <Textarea
                 id="inv-notes"
