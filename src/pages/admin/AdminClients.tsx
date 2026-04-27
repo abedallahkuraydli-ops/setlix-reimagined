@@ -27,6 +27,7 @@ interface ClientRow {
   overallProgress: number;
   updatedAt: string;
   lifecycleStatus: Lifecycle;
+  isSample: boolean;
 }
 
 const statusColors: Record<string, string> = {
@@ -87,7 +88,7 @@ const AdminClients = () => {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, user_id, full_name, created_at, updated_at, lifecycle_status")
+        .select("id, user_id, full_name, created_at, updated_at, lifecycle_status, is_sample")
         .order("created_at", { ascending: false });
 
       const { data: services } = await supabase
@@ -101,6 +102,7 @@ const AdminClients = () => {
       const mapped: ClientRow[] = clientProfiles.map((p: any) => {
         const lifecycleStatus = (p.lifecycle_status || "active") as Lifecycle;
         const clientServices = (services || []).filter((s: any) => s.client_id === p.id);
+        const isSample = !!p.is_sample;
 
         if (clientServices.length === 0) {
           return {
@@ -111,6 +113,7 @@ const AdminClients = () => {
             overallProgress: 0,
             updatedAt: p.updated_at || p.created_at,
             lifecycleStatus,
+            isSample,
           };
         }
 
@@ -135,6 +138,7 @@ const AdminClients = () => {
           overallProgress,
           updatedAt: new Date(latestUpdate).toISOString(),
           lifecycleStatus,
+          isSample,
         };
       });
 
@@ -254,7 +258,14 @@ const AdminClients = () => {
                   className="hover:bg-muted/30 cursor-pointer transition-colors"
                 >
                   <td className="p-4 font-medium text-foreground">
-                    <div>{row.fullName}</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span>{row.fullName}</span>
+                      {row.isSample && (
+                        <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 text-[10px] px-1.5 py-0">
+                          Sample
+                        </Badge>
+                      )}
+                    </div>
                     {row.servicesCount > 0 && (
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {row.servicesCount} service{row.servicesCount !== 1 ? "s" : ""}

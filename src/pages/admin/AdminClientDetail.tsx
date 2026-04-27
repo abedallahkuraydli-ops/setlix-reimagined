@@ -59,6 +59,8 @@ interface Profile {
   created_at: string;
   user_id: string;
   lifecycle_status: "active" | "completed";
+  is_sample?: boolean;
+  default_discount_percentage?: number;
 }
 
 interface ClientService {
@@ -515,7 +517,7 @@ const AdminClientDetail = () => {
 
       <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h2 className="text-lg font-semibold text-foreground">Client Profile</h2>
             <Badge
               variant={profile.lifecycle_status === "completed" ? "default" : "secondary"}
@@ -523,6 +525,16 @@ const AdminClientDetail = () => {
             >
               {profile.lifecycle_status === "completed" ? "Completed" : "In the Works"}
             </Badge>
+            {profile.is_sample && (
+              <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50">
+                Sample client
+              </Badge>
+            )}
+            {profile.default_discount_percentage && profile.default_discount_percentage > 0 ? (
+              <Badge variant="outline" className="border-emerald-300 text-emerald-700 bg-emerald-50">
+                {Number(profile.default_discount_percentage)}% discount
+              </Badge>
+            ) : null}
           </div>
           {profile.lifecycle_status === "completed" ? (
             <Button variant="outline" size="sm" onClick={() => setLifecycle("active")}>
@@ -574,6 +586,58 @@ const AdminClientDetail = () => {
           <Field label="Signed Up" value={new Date(profile.created_at).toLocaleDateString("en-GB")} />
           <Field label="Onboarding" value={profile.onboarding_completed ? "Completed ✓" : "Pending"} />
         </div>
+
+        {isSuperadmin && (
+          <div className="mt-6 pt-6 border-t border-border space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">Superadmin tools</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between gap-4 p-3 border border-border rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium">Sample client</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Test-run client. Excluded from dashboard counts and revenue metrics.
+                  </p>
+                </div>
+                <Switch
+                  checked={!!profile.is_sample}
+                  onCheckedChange={async (checked) => {
+                    const { error } = await supabase
+                      .from("profiles")
+                      .update({ is_sample: checked } as any)
+                      .eq("id", profile.id);
+                    if (error) toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+                    else { toast({ title: checked ? "Marked as sample client" : "Removed sample flag" }); fetchAll(); }
+                  }}
+                />
+              </div>
+              <div className="p-3 border border-border rounded-lg">
+                <Label htmlFor="discount-pct" className="text-sm font-medium">Default invoice discount (%)</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-2">
+                  Pre-applied when issuing new invoices. Client only sees this if greater than 0.
+                </p>
+                <Input
+                  id="discount-pct"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  defaultValue={profile.default_discount_percentage ?? 0}
+                  onBlur={async (e) => {
+                    const pct = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
+                    if (pct === (profile.default_discount_percentage ?? 0)) return;
+                    const { error } = await supabase
+                      .from("profiles")
+                      .update({ default_discount_percentage: pct } as any)
+                      .eq("id", profile.id);
+                    if (error) toast({ title: "Failed to update discount", description: error.message, variant: "destructive" });
+                    else { toast({ title: `Discount set to ${pct}%` }); fetchAll(); }
+                  }}
+                  className="h-9"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Contract */}

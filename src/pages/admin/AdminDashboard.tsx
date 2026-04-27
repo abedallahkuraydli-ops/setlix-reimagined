@@ -59,6 +59,9 @@ const AdminDashboard = () => {
   const [pendingAppts, setPendingAppts] = useState(0);
   const [unreadConversations, setUnreadConversations] = useState(0);
   const [unansweredConversations, setUnansweredConversations] = useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<
+    { month: string; invoiced: number; received: number }[]
+  >([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,13 +69,14 @@ const AdminDashboard = () => {
     const load = async () => {
       setLoading(true);
 
-      // 1) Client lifecycle counts
+      // 1) Client lifecycle counts (excluding sample clients)
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, lifecycle_status");
+        .select("id, lifecycle_status, is_sample");
 
       const counts = { active: 0, completed: 0, deleted: 0 };
       (profiles || []).forEach((p: any) => {
+        if (p.is_sample) return;
         const ls = (p.lifecycle_status || "active") as keyof typeof counts;
         if (counts[ls] !== undefined) counts[ls] += 1;
       });
@@ -167,6 +171,18 @@ const AdminDashboard = () => {
         }
       }
 
+      // 5) Monthly revenue: invoices issued + payments received (sample clients excluded by view)
+      const { data: revenueRows } = await supabase
+        .from("admin_monthly_revenue" as any)
+        .select("month, invoiced_cents, received_cents")
+        .order("month", { ascending: false })
+        .limit(12);
+      const revenue = ((revenueRows as any[]) || []).map((r) => ({
+        month: r.month,
+        invoiced: Number(r.invoiced_cents || 0),
+        received: Number(r.received_cents || 0),
+      }));
+
       if (cancelled) return;
       setClientCounts(counts);
       setTransitions(trans);
@@ -174,6 +190,7 @@ const AdminDashboard = () => {
       setPendingAppts(pending ?? 0);
       setUnreadConversations(unreadConvs);
       setUnansweredConversations(unansweredConvs);
+      setMonthlyRevenue(revenue);
       setLoading(false);
     };
 
@@ -299,7 +316,54 @@ const AdminDashboard = () => {
         </div>
       </section>
 
-      {/* Appointments + Messages */}
+      {/* Monthly revenue */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-primary" /> Monthly revenue
+        </h2>
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left p-4 font-semibold text-muted-foreground">Month</th>
+                  <th className="text-right p-4 font-semibold text-muted-foreground">Invoiced</th>
+                  <th className="text-right p-4 font-semibold text-muted-foreground">Received</th>
+                  <th className="text-right p-4 font-semibold text-muted-foreground">Outstanding</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loading ? (
+                  <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">Loading…</td></tr>
+                ) : monthlyRevenue.length === 0 ? (
+                  <tr><td colSpan={4} className="p-6 text-center text-muted-foreground text-xs">
+                    No invoices or payments recorded yet.
+                  </td></tr>
+                ) : (
+                  monthlyRevenue.map((m) => {
+                    const outstanding = Math.max(0, m.invoiced - m.received);
+                    const fmtEur = (cents: number) =>
+                      new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(cents / 100);
+                    const monthLabel = new Date(m.month).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+                    return (
+                      <tr key={m.month}>
+                        <td className="p-4 text-foreground">{monthLabel}</td>
+                        <td className="p-4 text-right tabular-nums text-foreground">{fmtEur(m.invoiced)}</td>
+                        <td className="p-4 text-right tabular-nums text-emerald-700">{fmtEur(m.received)}</td>
+                        <td className="p-4 text-right tabular-nums text-muted-foreground">{fmtEur(outstanding)}</td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="px-4 py-3 text-xs text-muted-foreground border-t border-border bg-muted/20">
+            Last 12 months. Invoiced = sum of issued invoices; Received = recorded client payments. Sample clients excluded.
+          </p>
+        </div>
+      </section>
+
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button
           onClick={() => navigate("/admin/appointments")}

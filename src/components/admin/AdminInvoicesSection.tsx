@@ -44,6 +44,8 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [vatRate, setVatRate] = useState("23");
+  const [discountPct, setDiscountPct] = useState("0");
+  const [clientDefaultDiscount, setClientDefaultDiscount] = useState(0);
   const [notes, setNotes] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -60,12 +62,23 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
 
   useEffect(() => {
     fetchInvoices();
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("default_discount_percentage")
+        .eq("id", clientId)
+        .maybeSingle();
+      const pct = Number((data as any)?.default_discount_percentage ?? 0);
+      setClientDefaultDiscount(pct);
+      setDiscountPct(String(pct));
+    })();
   }, [clientId]);
 
   const resetForm = () => {
     setDescription("");
     setAmount("");
     setVatRate("23");
+    setDiscountPct(String(clientDefaultDiscount));
     setNotes("");
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -80,11 +93,13 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
       toast({ title: "Only PDF files are accepted", variant: "destructive" });
       return;
     }
-    const cents = Math.round(parseFloat(amount) * 100);
-    if (!description.trim() || !Number.isFinite(cents) || cents <= 0) {
+    const grossCents = Math.round(parseFloat(amount) * 100);
+    if (!description.trim() || !Number.isFinite(grossCents) || grossCents <= 0) {
       toast({ title: "Description and amount are required", variant: "destructive" });
       return;
     }
+    const pct = Math.max(0, Math.min(100, parseFloat(discountPct) || 0));
+    const cents = Math.round(grossCents * (1 - pct / 100));
     setUploading(true);
     try {
       const path = `${clientUserId}/invoices/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
@@ -99,6 +114,7 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
         description: description.trim(),
         amount_cents: cents,
         vat_rate: parseFloat(vatRate) || 0,
+        discount_percentage: pct,
         currency: "EUR",
         status: "pending",
         notes: notes.trim() || null,
@@ -281,6 +297,38 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
                   onChange={(e) => setVatRate(e.target.value)}
                 />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="inv-discount">
+                Discount %
+                {clientDefaultDiscount > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground font-normal">
+                    (client default: {clientDefaultDiscount}%)
+                  </span>
+                )}
+              </Label>
+              <Input
+                id="inv-discount"
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={discountPct}
+                onChange={(e) => setDiscountPct(e.target.value)}
+              />
+              {(() => {
+                const gross = parseFloat(amount) || 0;
+                const pct = Math.max(0, Math.min(100, parseFloat(discountPct) || 0));
+                if (gross > 0 && pct > 0) {
+                  const net = gross * (1 - pct / 100);
+                  return (
+                    <p className="text-xs text-muted-foreground">
+                      Net: {fmt(Math.round(net * 100), "EUR")} (saving {fmt(Math.round((gross - net) * 100), "EUR")})
+                    </p>
+                  );
+                }
+                return null;
+              })()}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="inv-notes">Internal notes (optional)</Label>
