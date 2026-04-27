@@ -93,11 +93,13 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
       toast({ title: "Only PDF files are accepted", variant: "destructive" });
       return;
     }
-    const cents = Math.round(parseFloat(amount) * 100);
-    if (!description.trim() || !Number.isFinite(cents) || cents <= 0) {
+    const grossCents = Math.round(parseFloat(amount) * 100);
+    if (!description.trim() || !Number.isFinite(grossCents) || grossCents <= 0) {
       toast({ title: "Description and amount are required", variant: "destructive" });
       return;
     }
+    const pct = Math.max(0, Math.min(100, parseFloat(discountPct) || 0));
+    const cents = Math.round(grossCents * (1 - pct / 100));
     setUploading(true);
     try {
       const path = `${clientUserId}/invoices/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
@@ -112,6 +114,7 @@ export const AdminInvoicesSection = ({ clientId, clientUserId }: Props) => {
         description: description.trim(),
         amount_cents: cents,
         vat_rate: parseFloat(vatRate) || 0,
+        discount_percentage: pct,
         currency: "EUR",
         status: "pending",
         notes: notes.trim() || null,
