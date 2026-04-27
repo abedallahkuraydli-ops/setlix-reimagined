@@ -59,6 +59,8 @@ interface Profile {
   created_at: string;
   user_id: string;
   lifecycle_status: "active" | "completed";
+  is_sample?: boolean;
+  default_discount_percentage?: number;
 }
 
 interface ClientService {
