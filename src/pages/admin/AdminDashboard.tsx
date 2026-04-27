@@ -69,14 +69,21 @@ const AdminDashboard = () => {
     const load = async () => {
       setLoading(true);
 
-      // 1) Client lifecycle counts (excluding sample clients)
+      // 1) Client lifecycle counts (excluding sample clients and staff accounts)
+      const { data: staffRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "superadmin"]);
+      const staffUserIds = new Set((staffRoles || []).map((r: any) => r.user_id));
+
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, lifecycle_status, is_sample");
+        .select("id, user_id, lifecycle_status, is_sample");
 
       const counts = { active: 0, completed: 0, deleted: 0 };
       (profiles || []).forEach((p: any) => {
         if (p.is_sample) return;
+        if (staffUserIds.has(p.user_id)) return;
         const ls = (p.lifecycle_status || "active") as keyof typeof counts;
         if (counts[ls] !== undefined) counts[ls] += 1;
       });
