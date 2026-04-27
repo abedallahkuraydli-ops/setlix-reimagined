@@ -1179,9 +1179,11 @@ export type Database = {
           company_name: string | null
           created_at: string
           date_of_birth: string | null
+          default_discount_percentage: number
           first_name: string | null
           full_name: string | null
           id: string
+          is_sample: boolean
           last_name: string | null
           lifecycle_status: string
           meet_link: string | null
@@ -1196,9 +1198,11 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           date_of_birth?: string | null
+          default_discount_percentage?: number
           first_name?: string | null
           full_name?: string | null
           id?: string
+          is_sample?: boolean
           last_name?: string | null
           lifecycle_status?: string
           meet_link?: string | null
@@ -1213,9 +1217,11 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           date_of_birth?: string | null
+          default_discount_percentage?: number
           first_name?: string | null
           full_name?: string | null
           id?: string
+          is_sample?: boolean
           last_name?: string | null
           lifecycle_status?: string
           meet_link?: string | null
@@ -1656,7 +1662,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_monthly_revenue: {
+        Row: {
+          currency: string | null
+          invoiced_cents: number | null
+          month: string | null
+          received_cents: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_can_download_document: {
