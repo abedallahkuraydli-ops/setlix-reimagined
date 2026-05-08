@@ -59,9 +59,7 @@ const AdminDashboard = () => {
   const [pendingAppts, setPendingAppts] = useState(0);
   const [unreadConversations, setUnreadConversations] = useState(0);
   const [unansweredConversations, setUnansweredConversations] = useState(0);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<
-    { month: string; invoiced: number; received: number }[]
-  >([]);
+  const [totalReceived, setTotalReceived] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
