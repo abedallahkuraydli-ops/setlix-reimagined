@@ -29,6 +29,7 @@ import { ALLOWED_EXTENSIONS, computeSha256, formatBytes, logAudit, validateFile 
 import { AdminContractSection } from "@/components/admin/AdminContractSection";
 import { AdminInvoicesSection } from "@/components/admin/AdminInvoicesSection";
 import { AdminBillingSection } from "@/components/admin/AdminBillingSection";
+import { ClientMonthlyTransactions } from "@/components/admin/ClientMonthlyTransactions";
 import { AdminPendingRequestsSection } from "@/components/admin/AdminPendingRequestsSection";
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
 import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
@@ -653,6 +654,8 @@ const AdminClientDetail = () => {
       {/* Invoices & Payments */}
       <AdminInvoicesSection clientId={profile.id} clientUserId={profile.user_id} />
 
+      {/* Monthly transactions (superadmin only) */}
+      {isSuperadmin && <ClientMonthlyTransactions clientId={profile.id} />}
       {/* Pending Service Requests */}
       <AdminPendingRequestsSection clientId={profile.id} onChanged={fetchAll} />
 
