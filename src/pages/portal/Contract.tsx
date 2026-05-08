@@ -329,6 +329,20 @@ const Contract = () => {
           )}
         </div>
       )}
+
+      <AlertDialog open={unavailableOpen} onOpenChange={setUnavailableOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contract unavailable</AlertDialogTitle>
+            <AlertDialogDescription>
+              Not available at the moment, please contact your advisor for further details.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setUnavailableOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
