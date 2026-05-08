@@ -192,7 +192,7 @@ const AdminDashboard = () => {
       setPendingAppts(pending ?? 0);
       setUnreadConversations(unreadConvs);
       setUnansweredConversations(unansweredConvs);
-      setMonthlyRevenue(revenue);
+      setTotalReceived(totalRecv);
       setLoading(false);
     };
 
