@@ -36,16 +36,21 @@ const Contract = () => {
   const [drawnSig, setDrawnSig] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [unavailableOpen, setUnavailableOpen] = useState(false);
 
-  const downloadContract = async (path: string, name: string) => {
+  const downloadContract = async (path: string | null | undefined, name: string | null | undefined) => {
+    if (!path) {
+      setUnavailableOpen(true);
+      return;
+    }
     const { data, error } = await supabase.storage.from("documents").createSignedUrl(path, 60);
     if (error || !data) {
-      toast({ title: "Download failed", description: error?.message, variant: "destructive" });
+      setUnavailableOpen(true);
       return;
     }
     const a = document.createElement("a");
     a.href = data.signedUrl;
-    a.download = name;
+    a.download = name || "contract";
     a.click();
   };
 
