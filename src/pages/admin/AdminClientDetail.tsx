@@ -653,6 +653,8 @@ const AdminClientDetail = () => {
       {/* Invoices & Payments */}
       <AdminInvoicesSection clientId={profile.id} clientUserId={profile.user_id} />
 
+      {/* Monthly transactions (superadmin only) */}
+      {isSuperadmin && <ClientMonthlyTransactions clientId={profile.id} />}
       {/* Pending Service Requests */}
       <AdminPendingRequestsSection clientId={profile.id} onChanged={fetchAll} />
 
