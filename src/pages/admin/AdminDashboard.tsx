@@ -176,17 +176,14 @@ const AdminDashboard = () => {
         }
       }
 
-      // 5) Monthly revenue: invoices issued + payments received (sample clients excluded by view)
+      // 5) Total money received from all clients (sample clients excluded by view)
       const { data: revenueRows } = await supabase
         .from("admin_monthly_revenue" as any)
-        .select("month, invoiced_cents, received_cents")
-        .order("month", { ascending: false })
-        .limit(12);
-      const revenue = ((revenueRows as any[]) || []).map((r) => ({
-        month: r.month,
-        invoiced: Number(r.invoiced_cents || 0),
-        received: Number(r.received_cents || 0),
-      }));
+        .select("received_cents");
+      const totalRecv = ((revenueRows as any[]) || []).reduce(
+        (sum, r) => sum + Number(r.received_cents || 0),
+        0,
+      );
 
       if (cancelled) return;
       setClientCounts(counts);
