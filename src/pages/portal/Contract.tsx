@@ -8,6 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useContractStatus } from "@/hooks/useContractStatus";
 import { SignaturePad } from "@/components/portal/SignaturePad";
@@ -27,16 +36,21 @@ const Contract = () => {
   const [drawnSig, setDrawnSig] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [unavailableOpen, setUnavailableOpen] = useState(false);
 
-  const downloadContract = async (path: string, name: string) => {
+  const downloadContract = async (path: string | null | undefined, name: string | null | undefined) => {
+    if (!path) {
+      setUnavailableOpen(true);
+      return;
+    }
     const { data, error } = await supabase.storage.from("documents").createSignedUrl(path, 60);
     if (error || !data) {
-      toast({ title: "Download failed", description: error?.message, variant: "destructive" });
+      setUnavailableOpen(true);
       return;
     }
     const a = document.createElement("a");
     a.href = data.signedUrl;
-    a.download = name;
+    a.download = name || "contract";
     a.click();
   };
 
@@ -315,6 +329,20 @@ const Contract = () => {
           )}
         </div>
       )}
+
+      <AlertDialog open={unavailableOpen} onOpenChange={setUnavailableOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contract unavailable</AlertDialogTitle>
+            <AlertDialogDescription>
+              Not available at the moment, please contact your advisor for further details.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setUnavailableOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
