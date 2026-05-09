@@ -575,6 +575,7 @@ const AdminClientDetail = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <Field label="Full Name" value={profile.full_name} />
+          <Field label="Email" value={clientEmail} />
           <Field label="Date of Birth" value={profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString("en-GB") : null} />
           <Field label="Nationality" value={profile.nationality} />
           <Field label="Phone" value={profile.phone_number} />
