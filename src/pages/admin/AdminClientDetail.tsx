@@ -124,6 +124,7 @@ const AdminClientDetail = () => {
   const [issuedDocs, setIssuedDocs] = useState<ClientDoc[]>([]);
   const [uploadingIssued, setUploadingIssued] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [clientEmail, setClientEmail] = useState<string | null>(null);
   const [authorisedDocIds, setAuthorisedDocIds] = useState<Set<string>>(new Set());
   const [unauthDialogOpen, setUnauthDialogOpen] = useState(false);
   const [unauthDocName, setUnauthDocName] = useState<string | null>(null);
