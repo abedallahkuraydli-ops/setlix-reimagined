@@ -124,6 +124,7 @@ const AdminClientDetail = () => {
   const [issuedDocs, setIssuedDocs] = useState<ClientDoc[]>([]);
   const [uploadingIssued, setUploadingIssued] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [clientEmail, setClientEmail] = useState<string | null>(null);
   const [authorisedDocIds, setAuthorisedDocIds] = useState<Set<string>>(new Set());
   const [unauthDialogOpen, setUnauthDialogOpen] = useState(false);
   const [unauthDocName, setUnauthDocName] = useState<string | null>(null);
@@ -205,6 +206,15 @@ const AdminClientDetail = () => {
       if (clientDocs) {
         setClientUploads(clientDocs.filter((d) => d.category === "client_upload"));
         setIssuedDocs(clientDocs.filter((d) => d.category === "setlix_issued"));
+      }
+      // Fetch client email via edge function
+      try {
+        const { data: emailLookup } = await supabase.functions.invoke<{ email: string | null }>("get-user-email", {
+          body: { userId: profileRes.data.user_id },
+        });
+        setClientEmail(emailLookup?.email ?? null);
+      } catch {
+        setClientEmail(null);
       }
     }
     if (servicesRes.data) setServices(servicesRes.data as any);
@@ -565,6 +575,7 @@ const AdminClientDetail = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <Field label="Full Name" value={profile.full_name} />
+          <Field label="Email" value={clientEmail} />
           <Field label="Date of Birth" value={profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString("en-GB") : null} />
           <Field label="Nationality" value={profile.nationality} />
           <Field label="Phone" value={profile.phone_number} />
