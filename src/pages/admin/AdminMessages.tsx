@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageThread, type Message } from "@/components/messaging/MessageThread";
+import { AdminNewConversationDialog } from "@/components/messaging/AdminNewConversationDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -154,9 +155,15 @@ const AdminMessages = () => {
         } w-full md:w-96 border-r border-border flex-col bg-card`}
       >
         <div className="p-4 border-b border-border space-y-3">
-          <div>
-            <h1 className="text-lg font-bold text-foreground">Messages</h1>
-            <p className="text-xs text-muted-foreground">All client conversations</p>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h1 className="text-lg font-bold text-foreground">Messages</h1>
+              <p className="text-xs text-muted-foreground">All client conversations</p>
+            </div>
+            <AdminNewConversationDialog
+              adminProfileId={adminProfileId}
+              onCreated={(id) => setSelectedId(id)}
+            />
           </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
