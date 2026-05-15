@@ -178,12 +178,13 @@ const AdminManagement = () => {
   const openPermissions = async (a: AdminUser) => {
     setPermAdmin(a);
     setPermLoading(true);
-    const [clientsRes, allocRes, docsRes, permRes] = await Promise.all([
+    const [clientsRes, allocRes, docsRes, permRes, capRes] = await Promise.all([
       // Only client-role profiles (exclude admins/superadmins). Roles linked via user_id.
       supabase.from("profiles").select("id, full_name, first_name, last_name, user_id"),
       supabase.from("admin_client_allocations").select("client_profile_id").eq("admin_user_id", a.user_id),
       supabase.from("documents").select("id, file_name, category, user_id, created_at").order("created_at", { ascending: false }),
       supabase.from("document_download_permissions").select("document_id, authorised").eq("admin_user_id", a.user_id),
+      (supabase as any).from("admin_permissions").select("permission").eq("admin_user_id", a.user_id),
     ]);
 
     // Filter out non-client profiles by checking user_roles
@@ -214,7 +215,36 @@ const AdminManagement = () => {
     setAuthorisedDocs(new Set(
       (permRes.data ?? []).filter((r) => r.authorised).map((r) => r.document_id as string),
     ));
+    setGrantedPerms(new Set(((capRes as any).data ?? []).map((r: any) => r.permission as AdminPermission)));
     setPermLoading(false);
+  };
+
+  const togglePermission = async (perm: AdminPermission, on: boolean) => {
+    if (!permAdmin) return;
+    if (on) {
+      const { error } = await (supabase as any).from("admin_permissions").insert({
+        admin_user_id: permAdmin.user_id,
+        permission: perm,
+      });
+      if (error) {
+        toast({ title: "Failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      setGrantedPerms((s) => new Set(s).add(perm));
+    } else {
+      const { error } = await (supabase as any)
+        .from("admin_permissions")
+        .delete()
+        .eq("admin_user_id", permAdmin.user_id)
+        .eq("permission", perm);
+      if (error) {
+        toast({ title: "Failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      setGrantedPerms((s) => {
+        const next = new Set(s); next.delete(perm); return next;
+      });
+    }
   };
 
   const toggleAllocation = async (clientProfileId: string, on: boolean) => {
