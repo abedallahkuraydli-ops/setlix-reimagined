@@ -118,6 +118,30 @@ export type Database = {
           },
         ]
       }
+      admin_permissions: {
+        Row: {
+          admin_user_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          permission: Database["public"]["Enums"]["admin_permission"]
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          permission: Database["public"]["Enums"]["admin_permission"]
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["admin_permission"]
+        }
+        Relationships: []
+      }
       admin_settings: {
         Row: {
           bank_account_holder: string | null
@@ -1711,6 +1735,13 @@ export type Database = {
           bank_name: string
         }[]
       }
+      has_admin_permission: {
+        Args: {
+          _permission: Database["public"]["Enums"]["admin_permission"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1780,6 +1811,14 @@ export type Database = {
       retention_for_category: { Args: { _category: string }; Returns: string }
     }
     Enums: {
+      admin_permission:
+        | "edit_profile"
+        | "manage_appointments"
+        | "manage_invoices"
+        | "manage_documents"
+        | "manage_services"
+        | "manage_contracts"
+        | "manage_messages"
       app_role: "superadmin" | "admin" | "client"
       appointment_status: "pending" | "confirmed" | "cancelled"
       breach_severity: "low" | "medium" | "high" | "critical"
@@ -1956,6 +1995,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_permission: [
+        "edit_profile",
+        "manage_appointments",
+        "manage_invoices",
+        "manage_documents",
+        "manage_services",
+        "manage_contracts",
+        "manage_messages",
+      ],
       app_role: ["superadmin", "admin", "client"],
       appointment_status: ["pending", "confirmed", "cancelled"],
       breach_severity: ["low", "medium", "high", "critical"],

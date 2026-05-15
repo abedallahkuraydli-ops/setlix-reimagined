@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Loader2, ShieldCheck, Users, FileText } from "lucide-react";
+import { Plus, Trash2, Loader2, ShieldCheck, Users, FileText, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +67,25 @@ interface ClientDoc {
   created_at: string;
 }
 
+type AdminPermission =
+  | "edit_profile"
+  | "manage_appointments"
+  | "manage_invoices"
+  | "manage_documents"
+  | "manage_services"
+  | "manage_contracts"
+  | "manage_messages";
+
+const PERMISSION_LABELS: { key: AdminPermission; label: string; description: string }[] = [
+  { key: "edit_profile", label: "Edit client profile", description: "Update name, NIF, phone, lifecycle, etc." },
+  { key: "manage_appointments", label: "Manage appointments", description: "Confirm, reschedule, cancel appointments." },
+  { key: "manage_invoices", label: "Manage invoices & payments", description: "Create invoices, upload PDFs, record payments and billing." },
+  { key: "manage_documents", label: "Manage documents", description: "Upload, edit and delete client documents and requests." },
+  { key: "manage_services", label: "Manage services", description: "Approve service requests, edit client services." },
+  { key: "manage_contracts", label: "Manage contracts", description: "Upload contracts and mark them as signed." },
+  { key: "manage_messages", label: "Manage messaging", description: "Start conversations and delete threads." },
+];
+
 const fmt = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
@@ -90,6 +109,7 @@ const AdminManagement = () => {
   const [allocated, setAllocated] = useState<Set<string>>(new Set());
   const [docsByClient, setDocsByClient] = useState<Record<string, ClientDoc[]>>({});
   const [authorisedDocs, setAuthorisedDocs] = useState<Set<string>>(new Set());
+  const [grantedPerms, setGrantedPerms] = useState<Set<AdminPermission>>(new Set());
   const [permLoading, setPermLoading] = useState(false);
 
   const fetchAdmins = useCallback(async () => {
@@ -158,12 +178,13 @@ const AdminManagement = () => {
   const openPermissions = async (a: AdminUser) => {
     setPermAdmin(a);
     setPermLoading(true);
-    const [clientsRes, allocRes, docsRes, permRes] = await Promise.all([
+    const [clientsRes, allocRes, docsRes, permRes, capRes] = await Promise.all([
       // Only client-role profiles (exclude admins/superadmins). Roles linked via user_id.
       supabase.from("profiles").select("id, full_name, first_name, last_name, user_id"),
       supabase.from("admin_client_allocations").select("client_profile_id").eq("admin_user_id", a.user_id),
       supabase.from("documents").select("id, file_name, category, user_id, created_at").order("created_at", { ascending: false }),
       supabase.from("document_download_permissions").select("document_id, authorised").eq("admin_user_id", a.user_id),
+      (supabase as any).from("admin_permissions").select("permission").eq("admin_user_id", a.user_id),
     ]);
 
     // Filter out non-client profiles by checking user_roles
@@ -194,7 +215,36 @@ const AdminManagement = () => {
     setAuthorisedDocs(new Set(
       (permRes.data ?? []).filter((r) => r.authorised).map((r) => r.document_id as string),
     ));
+    setGrantedPerms(new Set(((capRes as any).data ?? []).map((r: any) => r.permission as AdminPermission)));
     setPermLoading(false);
+  };
+
+  const togglePermission = async (perm: AdminPermission, on: boolean) => {
+    if (!permAdmin) return;
+    if (on) {
+      const { error } = await (supabase as any).from("admin_permissions").insert({
+        admin_user_id: permAdmin.user_id,
+        permission: perm,
+      });
+      if (error) {
+        toast({ title: "Failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      setGrantedPerms((s) => new Set(s).add(perm));
+    } else {
+      const { error } = await (supabase as any)
+        .from("admin_permissions")
+        .delete()
+        .eq("admin_user_id", permAdmin.user_id)
+        .eq("permission", perm);
+      if (error) {
+        toast({ title: "Failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      setGrantedPerms((s) => {
+        const next = new Set(s); next.delete(perm); return next;
+      });
+    }
   };
 
   const toggleAllocation = async (clientProfileId: string, on: boolean) => {
@@ -263,7 +313,7 @@ const AdminManagement = () => {
             Admin management
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Create view-only admins and control which clients and documents they can access.
+            Create admin accounts and choose which clients, capabilities and documents each one can access.
           </p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -274,7 +324,7 @@ const AdminManagement = () => {
             <DialogHeader>
               <DialogTitle>Create admin account</DialogTitle>
               <DialogDescription>
-                The new admin will be view-only with no client access until you allocate them.
+                The new admin starts with no client access and no capabilities. Use Permissions to allocate clients and grant rights.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
@@ -357,13 +407,42 @@ const AdminManagement = () => {
                         <SheetHeader>
                           <SheetTitle>Permissions — {a.email}</SheetTitle>
                           <SheetDescription>
-                            Toggle which clients this admin can view, then for each allocated client toggle which documents they can download. Everything is denied by default.
+                            Choose which clients this admin can access, which capabilities they have on those clients, and which documents they can download. Everything is denied by default.
                           </SheetDescription>
                         </SheetHeader>
                         {permLoading ? (
                           <div className="py-12 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
                         ) : (
                           <div className="mt-6 space-y-6">
+                            <div>
+                              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                                <KeyRound className="h-4 w-4" /> Capabilities
+                              </h3>
+                              <p className="text-xs text-muted-foreground mb-3">
+                                These apply only to clients allocated below. By default the admin is view-only.
+                              </p>
+                              <div className="border rounded divide-y">
+                                {PERMISSION_LABELS.map((p) => {
+                                  const on = grantedPerms.has(p.key);
+                                  return (
+                                    <label
+                                      key={p.key}
+                                      className="flex items-start gap-3 p-3 cursor-pointer hover:bg-muted/30"
+                                    >
+                                      <Checkbox
+                                        checked={on}
+                                        onCheckedChange={(v) => togglePermission(p.key, !!v)}
+                                        className="mt-0.5"
+                                      />
+                                      <div className="flex-1">
+                                        <div className="text-sm font-medium">{p.label}</div>
+                                        <div className="text-xs text-muted-foreground">{p.description}</div>
+                                      </div>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
                             <div>
                               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
                                 <Users className="h-4 w-4" /> Client access
