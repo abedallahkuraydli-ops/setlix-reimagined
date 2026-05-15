@@ -407,13 +407,42 @@ const AdminManagement = () => {
                         <SheetHeader>
                           <SheetTitle>Permissions — {a.email}</SheetTitle>
                           <SheetDescription>
-                            Toggle which clients this admin can view, then for each allocated client toggle which documents they can download. Everything is denied by default.
+                            Choose which clients this admin can access, which capabilities they have on those clients, and which documents they can download. Everything is denied by default.
                           </SheetDescription>
                         </SheetHeader>
                         {permLoading ? (
                           <div className="py-12 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
                         ) : (
                           <div className="mt-6 space-y-6">
+                            <div>
+                              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                                <KeyRound className="h-4 w-4" /> Capabilities
+                              </h3>
+                              <p className="text-xs text-muted-foreground mb-3">
+                                These apply only to clients allocated below. By default the admin is view-only.
+                              </p>
+                              <div className="border rounded divide-y">
+                                {PERMISSION_LABELS.map((p) => {
+                                  const on = grantedPerms.has(p.key);
+                                  return (
+                                    <label
+                                      key={p.key}
+                                      className="flex items-start gap-3 p-3 cursor-pointer hover:bg-muted/30"
+                                    >
+                                      <Checkbox
+                                        checked={on}
+                                        onCheckedChange={(v) => togglePermission(p.key, !!v)}
+                                        className="mt-0.5"
+                                      />
+                                      <div className="flex-1">
+                                        <div className="text-sm font-medium">{p.label}</div>
+                                        <div className="text-xs text-muted-foreground">{p.description}</div>
+                                      </div>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
                             <div>
                               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
                                 <Users className="h-4 w-4" /> Client access
