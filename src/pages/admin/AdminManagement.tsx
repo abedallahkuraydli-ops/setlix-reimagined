@@ -324,7 +324,7 @@ const AdminManagement = () => {
             <DialogHeader>
               <DialogTitle>Create admin account</DialogTitle>
               <DialogDescription>
-                The new admin will be view-only with no client access until you allocate them.
+                The new admin starts with no client access and no capabilities. Use Permissions to allocate clients and grant rights.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
