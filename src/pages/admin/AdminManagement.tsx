@@ -313,7 +313,7 @@ const AdminManagement = () => {
             Admin management
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Create view-only admins and control which clients and documents they can access.
+            Create admin accounts and choose which clients, capabilities and documents each one can access.
           </p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
