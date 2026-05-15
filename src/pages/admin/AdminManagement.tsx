@@ -67,6 +67,25 @@ interface ClientDoc {
   created_at: string;
 }
 
+type AdminPermission =
+  | "edit_profile"
+  | "manage_appointments"
+  | "manage_invoices"
+  | "manage_documents"
+  | "manage_services"
+  | "manage_contracts"
+  | "manage_messages";
+
+const PERMISSION_LABELS: { key: AdminPermission; label: string; description: string }[] = [
+  { key: "edit_profile", label: "Edit client profile", description: "Update name, NIF, phone, lifecycle, etc." },
+  { key: "manage_appointments", label: "Manage appointments", description: "Confirm, reschedule, cancel appointments." },
+  { key: "manage_invoices", label: "Manage invoices & payments", description: "Create invoices, upload PDFs, record payments and billing." },
+  { key: "manage_documents", label: "Manage documents", description: "Upload, edit and delete client documents and requests." },
+  { key: "manage_services", label: "Manage services", description: "Approve service requests, edit client services." },
+  { key: "manage_contracts", label: "Manage contracts", description: "Upload contracts and mark them as signed." },
+  { key: "manage_messages", label: "Manage messaging", description: "Start conversations and delete threads." },
+];
+
 const fmt = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
@@ -90,6 +109,7 @@ const AdminManagement = () => {
   const [allocated, setAllocated] = useState<Set<string>>(new Set());
   const [docsByClient, setDocsByClient] = useState<Record<string, ClientDoc[]>>({});
   const [authorisedDocs, setAuthorisedDocs] = useState<Set<string>>(new Set());
+  const [grantedPerms, setGrantedPerms] = useState<Set<AdminPermission>>(new Set());
   const [permLoading, setPermLoading] = useState(false);
 
   const fetchAdmins = useCallback(async () => {
