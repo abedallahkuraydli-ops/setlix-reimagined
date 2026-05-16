@@ -147,13 +147,20 @@ const Onboarding = () => {
       .single();
 
     if (profile) {
-      const inserts = selectedServiceIds.map((scId) => ({
-        client_id: profile.id,
-        service_catalogue_id: scId,
-        status: "requested" as const,
-        progress_percentage: 0,
-      }));
-      await supabase.from("client_services").insert(inserts);
+      // Map each selected category to a representative active catalogue id
+      // (first one alphabetically) so we can satisfy the NOT NULL FK.
+      const inserts = selectedCategories
+        .map((cat) => catalogue.find((s) => s.category === cat))
+        .filter((s): s is CatalogueItem => !!s)
+        .map((s) => ({
+          client_id: profile.id,
+          service_catalogue_id: s.id,
+          status: "requested" as const,
+          progress_percentage: 0,
+        }));
+      if (inserts.length > 0) {
+        await supabase.from("client_services").insert(inserts);
+      }
     }
 
     // Notify Setlix team of the new client signup (fire-and-forget).
