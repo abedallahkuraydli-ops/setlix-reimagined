@@ -55,18 +55,17 @@ const Onboarding = () => {
   const [nationalitySearch, setNationalitySearch] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  // Service selection
+  // Service selection — by main category (multi-select)
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([]);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [servicesOpen, setServicesOpen] = useState(false);
-  const [serviceSearch, setServiceSearch] = useState("");
 
   useEffect(() => {
     supabase
       .from("service_catalogue")
       .select("id, name, category")
       .eq("active", true)
-      .order("category")
+      .in("category", MAIN_CATEGORIES.map((c) => c.category))
       .order("name")
       .then(({ data }) => {
         if (data) setCatalogue(data);
@@ -77,25 +76,20 @@ const Onboarding = () => {
     n.toLowerCase().includes(nationalitySearch.toLowerCase())
   );
 
-  const filteredCatalogue = catalogue.filter((s) =>
-    s.name.toLowerCase().includes(serviceSearch.toLowerCase()) ||
-    s.category.toLowerCase().includes(serviceSearch.toLowerCase())
+  // Only show categories that actually have at least one active catalogue item.
+  const availableCategories = MAIN_CATEGORIES.filter((c) =>
+    catalogue.some((s) => s.category === c.category)
   );
 
-  const groupedCatalogue = filteredCatalogue.reduce<Record<string, CatalogueItem[]>>((acc, item) => {
-    (acc[item.category] = acc[item.category] || []).push(item);
-    return acc;
-  }, {});
-
-  const toggleService = (id: string) => {
-    setSelectedServiceIds((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+  const toggleCategory = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   };
 
-  const selectedNames = catalogue
-    .filter((s) => selectedServiceIds.includes(s.id))
-    .map((s) => s.name);
+  const selectedLabels = MAIN_CATEGORIES
+    .filter((c) => selectedCategories.includes(c.category))
+    .map((c) => c.label);
 
   const validate = () => {
     const errs: Record<string, string> = {};
