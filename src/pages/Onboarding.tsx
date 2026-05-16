@@ -393,22 +393,22 @@ const Onboarding = () => {
                     role="combobox"
                     className={cn(
                       "w-full justify-between font-normal h-auto min-h-10",
-                      selectedServiceIds.length === 0 && "text-muted-foreground",
+                      selectedCategories.length === 0 && "text-muted-foreground",
                       errors.services && "border-destructive"
                     )}
                   >
-                    {selectedServiceIds.length === 0 ? (
+                    {selectedCategories.length === 0 ? (
                       "Select one or more services"
                     ) : (
                       <span className="flex flex-wrap gap-1">
-                        {selectedNames.slice(0, 3).map((name) => (
+                        {selectedLabels.slice(0, 3).map((name) => (
                           <Badge key={name} variant="secondary" className="text-xs font-normal">
                             {name}
                           </Badge>
                         ))}
-                        {selectedNames.length > 3 && (
+                        {selectedLabels.length > 3 && (
                           <Badge variant="secondary" className="text-xs font-normal">
-                            +{selectedNames.length - 3} more
+                            +{selectedLabels.length - 3} more
                           </Badge>
                         )}
                       </span>
@@ -417,48 +417,32 @@ const Onboarding = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                  <div className="flex items-center border-b px-3">
-                    <Search className="h-4 w-4 shrink-0 opacity-50" />
-                    <input
-                      placeholder="Search services..."
-                      value={serviceSearch}
-                      onChange={(e) => setServiceSearch(e.target.value)}
-                      className="flex h-10 w-full bg-transparent py-3 px-2 text-sm outline-none placeholder:text-muted-foreground"
-                    />
-                  </div>
                   <div className="max-h-64 overflow-y-auto p-1">
-                    {Object.keys(groupedCatalogue).length === 0 ? (
-                      <p className="py-6 text-center text-sm text-muted-foreground">No services found</p>
+                    {availableCategories.length === 0 ? (
+                      <p className="py-6 text-center text-sm text-muted-foreground">No services available</p>
                     ) : (
-                      Object.entries(groupedCatalogue).map(([category, items]) => (
-                        <div key={category}>
-                          <p className="px-2 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            {category}
-                          </p>
-                          {items.map((s) => {
-                            const selected = selectedServiceIds.includes(s.id);
-                            return (
-                              <button
-                                key={s.id}
-                                type="button"
-                                onClick={() => toggleService(s.id)}
-                                className={cn(
-                                  "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground gap-2",
-                                  selected && "bg-accent/50"
-                                )}
-                              >
-                                <div className={cn(
-                                  "h-4 w-4 rounded border flex items-center justify-center shrink-0",
-                                  selected ? "bg-primary border-primary" : "border-input"
-                                )}>
-                                  {selected && <Check className="h-3 w-3 text-primary-foreground" />}
-                                </div>
-                                <span className="text-left">{s.name}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ))
+                      availableCategories.map((c) => {
+                        const selected = selectedCategories.includes(c.category);
+                        return (
+                          <button
+                            key={c.category}
+                            type="button"
+                            onClick={() => toggleCategory(c.category)}
+                            className={cn(
+                              "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground gap-2",
+                              selected && "bg-accent/50"
+                            )}
+                          >
+                            <div className={cn(
+                              "h-4 w-4 rounded border flex items-center justify-center shrink-0",
+                              selected ? "bg-primary border-primary" : "border-input"
+                            )}>
+                              {selected && <Check className="h-3 w-3 text-primary-foreground" />}
+                            </div>
+                            <span className="text-left">{c.label}</span>
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 </PopoverContent>
