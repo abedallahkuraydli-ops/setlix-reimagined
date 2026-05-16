@@ -32,7 +32,7 @@ const visas: VisaCategory[] = [
   {
     group: "Residency",
     icon: Briefcase,
-    title: "Work Visa — Subordinate Activity",
+    title: "Work Visa (Subordinate Activity)",
     code: "D1",
     duration: "4-month entry visa → 2-year residence permit",
     description:
