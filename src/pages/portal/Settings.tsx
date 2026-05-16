@@ -207,7 +207,7 @@ const Settings = () => {
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={pendingDeletion || submittingDeletion}>
+                <Button variant="destructive" size="sm" disabled={submittingDeletion}>
                   <Trash2 className="h-4 w-4 mr-1" />
                   Delete
                 </Button>
