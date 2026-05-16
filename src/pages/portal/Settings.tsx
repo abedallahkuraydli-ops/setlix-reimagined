@@ -25,7 +25,6 @@ const Settings = () => {
   const [exporting, setExporting] = useState(false);
   const [deletionReason, setDeletionReason] = useState("");
   const [submittingDeletion, setSubmittingDeletion] = useState(false);
-  const [pendingDeletion, setPendingDeletion] = useState<boolean>(false);
   const [consents, setConsents] = useState<ConsentRecord[]>([]);
 
   useEffect(() => {
