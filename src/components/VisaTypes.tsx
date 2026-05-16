@@ -121,9 +121,9 @@ const VisaTypes = () => {
                   exceeding 90 days.
                 </p>
                 <p>
-                  Residency visas are issued for 4 months and two entries; within that period the
-                  holder must apply for a residence permit with AIMA — Agência para a Integração,
-                  Migrações e Asilo.
+                  Residency visas are generally issued for 4 months and 2 entries; within that
+                  period the holder must apply for a residence permit with AIMA (Agência para a
+                  Integração, Migraçãoes e Asilo).
                 </p>
                 <p>
                   Information compiled from{" "}
@@ -144,9 +144,7 @@ const VisaTypes = () => {
                   >
                     aima.gov.pt
                   </a>{" "}
-                  and Law 23/2007 as amended by Law 61/2025 (22 October 2025). Eligibility, fees and
-                  documentation may change — always confirm with the competent authority or your
-                  advisor.
+                  and Law 23/2007 as amended by Law 61/2025 (22 October 2025).
                 </p>
               </AccordionContent>
             </AccordionItem>
