@@ -209,28 +209,29 @@ const Settings = () => {
 
           <div className="border border-destructive/30 bg-destructive/5 rounded-lg p-4 flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="font-medium text-foreground text-sm">Request account deletion</p>
+              <p className="font-medium text-foreground text-sm">Delete your account</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Submit a request to permanently erase your account and personal data (GDPR Art. 17). Our team will review and process it within 30 days. Some data may be retained where required by Portuguese fiscal or legal obligations.
+                Permanently delete your Setlix account and personal data. Records required by EU and Portuguese accounting and tax regulations (invoices, contracts and related fiscal documents) will be retained for the legally required period.
               </p>
-              {pendingDeletion && (
-                <p className="text-xs text-amber-600 font-medium mt-2">
-                  ✓ A deletion request is pending review.
-                </p>
-              )}
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={pendingDeletion}>
+                <Button variant="destructive" size="sm" disabled={pendingDeletion || submittingDeletion}>
                   <Trash2 className="h-4 w-4 mr-1" />
-                  Request
+                  Delete
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Request account deletion?</AlertDialogTitle>
+                  <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will submit a request to erase your account and personal data. You can optionally tell us why (this helps us improve our service).
+                    Your personal data will be deleted from the Setlix database, except for
+                    information we are legally required to keep for accounting and tax purposes
+                    under EU and Portuguese regulations (e.g. invoices and related fiscal
+                    documents).
+                    <br /><br />
+                    This action is permanent and cannot be undone. You can optionally tell us
+                    why below.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <Textarea
@@ -241,8 +242,12 @@ const Settings = () => {
                 />
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeletionRequest} disabled={submittingDeletion}>
-                    {submittingDeletion ? "Submitting…" : "Submit request"}
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    disabled={submittingDeletion}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {submittingDeletion ? "Deleting…" : "Delete my account"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
