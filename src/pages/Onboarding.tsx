@@ -27,6 +27,17 @@ interface CatalogueItem {
   category: string;
 }
 
+// Main service categories shown in the onboarding dropdown.
+// `category` matches the value stored in service_catalogue.category.
+const MAIN_CATEGORIES: { category: string; label: string }[] = [
+  { category: "Company Registration", label: "Company Registration Services" },
+  { category: "Administrative Services", label: "Administrative Services" },
+  { category: "Financial Services", label: "Financial Services" },
+  { category: "Relocation Services", label: "Relocation Services" },
+  { category: "Community & Networking", label: "Community & Networking Services" },
+  { category: "Golden Visa", label: "Golden Visa Services" },
+];
+
 const Onboarding = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
