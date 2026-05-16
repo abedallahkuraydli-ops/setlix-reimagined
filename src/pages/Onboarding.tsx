@@ -168,9 +168,7 @@ const Onboarding = () => {
     const isStaffEmail = (user.email || "").toLowerCase().endsWith("@setlix.pt");
     if (!isStaffEmail) {
       try {
-        const selectedServiceNames = catalogue
-          .filter((s) => selectedServiceIds.includes(s.id))
-          .map((s) => s.name);
+        const selectedServiceNames = selectedLabels;
         await supabase.functions.invoke("send-transactional-email", {
           body: {
             templateName: "new-client-signup",
