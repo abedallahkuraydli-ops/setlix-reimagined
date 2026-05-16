@@ -27,6 +27,17 @@ interface CatalogueItem {
   category: string;
 }
 
+// Main service categories shown in the onboarding dropdown.
+// `category` matches the value stored in service_catalogue.category.
+const MAIN_CATEGORIES: { category: string; label: string }[] = [
+  { category: "Company Registration", label: "Company Registration Services" },
+  { category: "Administrative Services", label: "Administrative Services" },
+  { category: "Financial Services", label: "Financial Services" },
+  { category: "Relocation Services", label: "Relocation Services" },
+  { category: "Community & Networking", label: "Community & Networking Services" },
+  { category: "Golden Visa", label: "Golden Visa Services" },
+];
+
 const Onboarding = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -44,18 +55,17 @@ const Onboarding = () => {
   const [nationalitySearch, setNationalitySearch] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  // Service selection
+  // Service selection — by main category (multi-select)
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([]);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [servicesOpen, setServicesOpen] = useState(false);
-  const [serviceSearch, setServiceSearch] = useState("");
 
   useEffect(() => {
     supabase
       .from("service_catalogue")
       .select("id, name, category")
       .eq("active", true)
-      .order("category")
+      .in("category", MAIN_CATEGORIES.map((c) => c.category))
       .order("name")
       .then(({ data }) => {
         if (data) setCatalogue(data);
@@ -66,25 +76,20 @@ const Onboarding = () => {
     n.toLowerCase().includes(nationalitySearch.toLowerCase())
   );
 
-  const filteredCatalogue = catalogue.filter((s) =>
-    s.name.toLowerCase().includes(serviceSearch.toLowerCase()) ||
-    s.category.toLowerCase().includes(serviceSearch.toLowerCase())
+  // Only show categories that actually have at least one active catalogue item.
+  const availableCategories = MAIN_CATEGORIES.filter((c) =>
+    catalogue.some((s) => s.category === c.category)
   );
 
-  const groupedCatalogue = filteredCatalogue.reduce<Record<string, CatalogueItem[]>>((acc, item) => {
-    (acc[item.category] = acc[item.category] || []).push(item);
-    return acc;
-  }, {});
-
-  const toggleService = (id: string) => {
-    setSelectedServiceIds((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+  const toggleCategory = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   };
 
-  const selectedNames = catalogue
-    .filter((s) => selectedServiceIds.includes(s.id))
-    .map((s) => s.name);
+  const selectedLabels = MAIN_CATEGORIES
+    .filter((c) => selectedCategories.includes(c.category))
+    .map((c) => c.label);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -104,7 +109,7 @@ const Onboarding = () => {
       errs.nif = "NIF must be exactly 9 digits";
     }
     if (!phone) errs.phone = "Phone number is required";
-    if (selectedServiceIds.length === 0) errs.services = "Please select at least one service";
+    if (selectedCategories.length === 0) errs.services = "Please select at least one service";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -142,13 +147,20 @@ const Onboarding = () => {
       .single();
 
     if (profile) {
-      const inserts = selectedServiceIds.map((scId) => ({
-        client_id: profile.id,
-        service_catalogue_id: scId,
-        status: "requested" as const,
-        progress_percentage: 0,
-      }));
-      await supabase.from("client_services").insert(inserts);
+      // Map each selected category to a representative active catalogue id
+      // (first one alphabetically) so we can satisfy the NOT NULL FK.
+      const inserts = selectedCategories
+        .map((cat) => catalogue.find((s) => s.category === cat))
+        .filter((s): s is CatalogueItem => !!s)
+        .map((s) => ({
+          client_id: profile.id,
+          service_catalogue_id: s.id,
+          status: "requested" as const,
+          progress_percentage: 0,
+        }));
+      if (inserts.length > 0) {
+        await supabase.from("client_services").insert(inserts);
+      }
     }
 
     // Notify Setlix team of the new client signup (fire-and-forget).
@@ -156,9 +168,7 @@ const Onboarding = () => {
     const isStaffEmail = (user.email || "").toLowerCase().endsWith("@setlix.pt");
     if (!isStaffEmail) {
       try {
-        const selectedServiceNames = catalogue
-          .filter((s) => selectedServiceIds.includes(s.id))
-          .map((s) => s.name);
+        const selectedServiceNames = selectedLabels;
         await supabase.functions.invoke("send-transactional-email", {
           body: {
             templateName: "new-client-signup",
@@ -383,22 +393,22 @@ const Onboarding = () => {
                     role="combobox"
                     className={cn(
                       "w-full justify-between font-normal h-auto min-h-10",
-                      selectedServiceIds.length === 0 && "text-muted-foreground",
+                      selectedCategories.length === 0 && "text-muted-foreground",
                       errors.services && "border-destructive"
                     )}
                   >
-                    {selectedServiceIds.length === 0 ? (
+                    {selectedCategories.length === 0 ? (
                       "Select one or more services"
                     ) : (
                       <span className="flex flex-wrap gap-1">
-                        {selectedNames.slice(0, 3).map((name) => (
+                        {selectedLabels.slice(0, 3).map((name) => (
                           <Badge key={name} variant="secondary" className="text-xs font-normal">
                             {name}
                           </Badge>
                         ))}
-                        {selectedNames.length > 3 && (
+                        {selectedLabels.length > 3 && (
                           <Badge variant="secondary" className="text-xs font-normal">
-                            +{selectedNames.length - 3} more
+                            +{selectedLabels.length - 3} more
                           </Badge>
                         )}
                       </span>
@@ -407,48 +417,32 @@ const Onboarding = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                  <div className="flex items-center border-b px-3">
-                    <Search className="h-4 w-4 shrink-0 opacity-50" />
-                    <input
-                      placeholder="Search services..."
-                      value={serviceSearch}
-                      onChange={(e) => setServiceSearch(e.target.value)}
-                      className="flex h-10 w-full bg-transparent py-3 px-2 text-sm outline-none placeholder:text-muted-foreground"
-                    />
-                  </div>
                   <div className="max-h-64 overflow-y-auto p-1">
-                    {Object.keys(groupedCatalogue).length === 0 ? (
-                      <p className="py-6 text-center text-sm text-muted-foreground">No services found</p>
+                    {availableCategories.length === 0 ? (
+                      <p className="py-6 text-center text-sm text-muted-foreground">No services available</p>
                     ) : (
-                      Object.entries(groupedCatalogue).map(([category, items]) => (
-                        <div key={category}>
-                          <p className="px-2 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            {category}
-                          </p>
-                          {items.map((s) => {
-                            const selected = selectedServiceIds.includes(s.id);
-                            return (
-                              <button
-                                key={s.id}
-                                type="button"
-                                onClick={() => toggleService(s.id)}
-                                className={cn(
-                                  "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground gap-2",
-                                  selected && "bg-accent/50"
-                                )}
-                              >
-                                <div className={cn(
-                                  "h-4 w-4 rounded border flex items-center justify-center shrink-0",
-                                  selected ? "bg-primary border-primary" : "border-input"
-                                )}>
-                                  {selected && <Check className="h-3 w-3 text-primary-foreground" />}
-                                </div>
-                                <span className="text-left">{s.name}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ))
+                      availableCategories.map((c) => {
+                        const selected = selectedCategories.includes(c.category);
+                        return (
+                          <button
+                            key={c.category}
+                            type="button"
+                            onClick={() => toggleCategory(c.category)}
+                            className={cn(
+                              "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground gap-2",
+                              selected && "bg-accent/50"
+                            )}
+                          >
+                            <div className={cn(
+                              "h-4 w-4 rounded border flex items-center justify-center shrink-0",
+                              selected ? "bg-primary border-primary" : "border-input"
+                            )}>
+                              {selected && <Check className="h-3 w-3 text-primary-foreground" />}
+                            </div>
+                            <span className="text-left">{c.label}</span>
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 </PopoverContent>
