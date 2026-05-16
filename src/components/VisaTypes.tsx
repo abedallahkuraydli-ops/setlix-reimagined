@@ -151,7 +151,7 @@ const VisaTypes = () => {
     <section id="visas" className="py-24 bg-muted/30 border-t border-border">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2 text-center">
-          Portuguese Visa Types — 2026
+          Portuguese Visa Types
         </h2>
         <div className="w-16 h-1 bg-primary mx-auto mb-4 rounded-full" />
         <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-12 text-sm md:text-base">
@@ -160,46 +160,10 @@ const VisaTypes = () => {
           updates introduced by Law 61/2025.
         </p>
 
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-          {visas.map((v) => {
-            const Icon = v.icon;
-            return (
-              <div
-                key={v.title}
-                className="bg-card border border-border rounded-xl p-5 flex flex-col hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="rounded-lg bg-primary/10 text-primary p-2 shrink-0">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-foreground leading-tight">{v.title}</h3>
-                      {v.code && (
-                        <span className="text-[10px] font-semibold tracking-wide uppercase bg-primary/10 text-primary rounded px-1.5 py-0.5">
-                          {v.code}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {v.group} · {v.duration}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">{v.description}</p>
-                <div className="mt-auto flex flex-wrap gap-1.5">
-                  {v.whoFor.map((w) => (
-                    <span
-                      key={w}
-                      className="text-[11px] bg-muted text-muted-foreground rounded-full px-2 py-0.5"
-                    >
-                      {w}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          {visas.map((v) => (
+            <VisaCard key={v.title} {...v} />
+          ))}
         </div>
 
         <div className="max-w-3xl mx-auto mt-12">
