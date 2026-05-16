@@ -103,29 +103,31 @@ const Settings = () => {
     }
   };
 
-  const handleDeletionRequest = async () => {
+  const handleDeleteAccount = async () => {
     if (!user) return;
     setSubmittingDeletion(true);
-    const { error } = await supabase.from("account_deletion_requests").insert({
-      user_id: user.id,
-      reason: deletionReason.trim() || null,
+    const { data, error } = await supabase.functions.invoke("client-delete-account", {
+      body: { reason: deletionReason.trim() || null },
     });
-    setSubmittingDeletion(false);
-    if (error) {
-      toast({ title: "Request failed", description: error.message, variant: "destructive" });
-    } else {
-      setPendingDeletion(true);
-      const reasonSent = deletionReason.trim();
-      setDeletionReason("");
-      // Notify Setlix admins via email with compliance checklist
-      supabase.functions.invoke("notify-data-erasure", {
-        body: { user_id: user.id, reason: reasonSent || null },
-      }).catch((e) => console.error("notify-data-erasure failed", e));
+    if (error || (data && (data as { error?: string }).error)) {
+      setSubmittingDeletion(false);
       toast({
-        title: "Deletion request submitted",
-        description: "Our team will process your request within 30 days, as required by GDPR.",
+        title: "Deletion failed",
+        description:
+          (data as { error?: string } | null)?.error ||
+          error?.message ||
+          "Please try again or contact support.",
+        variant: "destructive",
       });
+      return;
     }
+    toast({
+      title: "Account deleted",
+      description:
+        "Your account has been deleted. Records required by Portuguese fiscal law are retained as explained.",
+    });
+    await supabase.auth.signOut();
+    window.location.href = "/";
   };
 
   return (
