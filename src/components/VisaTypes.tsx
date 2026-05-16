@@ -15,106 +15,76 @@ import {
 import VisaCard from "./VisaCard";
 
 type VisaCategory = {
-  group: string;
   icon: typeof Briefcase;
   title: string;
   code?: string;
-  duration: string;
   description: string;
-  whoFor: string[];
 };
 
 // Sourced from the Portuguese Ministry of Foreign Affairs (vistos.mne.gov.pt),
 // AIMA (aima.gov.pt) and Law 23/2007 as amended (incl. Law 61/2025, Oct 22, 2025).
 const visas: VisaCategory[] = [
   {
-    group: "Residency",
     icon: Briefcase,
     title: "Work Visa (Subordinate Activity)",
     code: "D1",
-    duration: "4-month entry visa → 2-year residence permit",
     description:
-      "For third-country nationals with a signed employment contract or binding job offer from a Portuguese employer.",
-    whoFor: ["Employees with a Portuguese contract", "Sponsored hires", "Inter-company transfers"],
+      "The D1 covers people moving to Portugal to take up paid employment under a Portuguese contract. It is the standard route for hires by companies based in Portugal, including intra-company transfers.",
   },
   {
-    group: "Residency",
     icon: Sparkles,
     title: "Entrepreneur & Independent Worker Visa",
     code: "D2",
-    duration: "4-month entry visa → 2-year residence permit",
     description:
-      "For entrepreneurs setting up a company in Portugal or independent service providers with proof of viable activity.",
-    whoFor: ["Founders & business owners", "Freelancers with PT clients", "Startup operators"],
+      "The D2 is designed for people who want to start a business in Portugal or work independently as service providers. It supports founders setting up a company and freelancers with a viable professional activity.",
   },
   {
-    group: "Residency",
     icon: GraduationCap,
     title: "Highly Qualified Activity Visa",
     code: "D3",
-    duration: "4-month entry visa → EU Blue Card eligible",
     description:
-      "For specialised roles requiring advanced technical skills or higher education, including EU Blue Card pathway.",
-    whoFor: ["Senior engineers & researchers", "Specialist medical staff", "EU Blue Card applicants"],
+      "The D3 is granted for specialised roles that require advanced technical skills or higher education. It is the visa typically used for senior professionals, researchers and EU Blue Card pathways.",
   },
   {
-    group: "Residency",
     icon: GraduationCap,
     title: "Study, Internship & Volunteering Visa",
     code: "D4",
-    duration: "Duration of the programme",
     description:
-      "For higher-education students, exchange pupils, unpaid trainees and volunteers enrolled with a recognised host institution.",
-    whoFor: ["University students", "Erasmus & exchange", "Research interns"],
+      "The D4 is issued for study at recognised institutions, unpaid internships and volunteering programmes in Portugal. It covers full degree programmes as well as shorter educational activities.",
   },
   {
-    group: "Residency",
     icon: GraduationCap,
     title: "Higher Education Student Mobility Visa",
     code: "D5",
-    duration: "Duration of the mobility programme",
     description:
-      "For students moving to Portugal under a mobility programme between higher-education institutions, including EU and bilateral agreements.",
-    whoFor: ["Mobility-programme students", "Exchange scholars", "Joint-degree candidates"],
+      "The D5 is for students taking part in mobility programmes between higher-education institutions. It applies to exchanges, joint degrees and bilateral cooperation agreements.",
   },
   {
-    group: "Residency",
     icon: Users,
     title: "Family Reunification Visa",
     code: "D6",
-    duration: "Matches sponsor's permit",
     description:
-      "Allows spouses, partners, minor children and dependent relatives to join a legal resident in Portugal.",
-    whoFor: ["Spouses & partners", "Dependent children", "Dependent parents"],
+      "The D6 allows family members of a legal resident in Portugal to join them in the country. It is the dedicated route for keeping families together under the same legal status.",
   },
   {
-    group: "Residency",
     icon: Wallet,
     title: "Passive Income & Retirement Visa",
     code: "D7",
-    duration: "4-month entry visa → 2-year residence permit",
     description:
-      "For applicants with stable, recurring passive income (pensions, rentals, dividends) sufficient to live in Portugal.",
-    whoFor: ["Retirees", "Pensioners", "Investors with rental income"],
+      "The D7 is granted to people who rely on stable, recurring passive income such as pensions, rentals or dividends. It is widely used by retirees and individuals living off non-employment income.",
   },
   {
-    group: "Residency",
     icon: Laptop,
     title: "Digital Nomad Visa",
     code: "D8",
-    duration: "Temporary stay (1 yr) or residency (2 yrs renewable)",
     description:
-      "For remote workers and freelancers earning from non-Portuguese sources at least 4× the national minimum wage.",
-    whoFor: ["Remote employees", "Independent consultants", "Location-independent founders"],
+      "The D8 is the visa for remote workers and freelancers earning from clients or employers based outside Portugal. It supports location-independent professional activity carried out from Portuguese soil.",
   },
   {
-    group: "Investment",
     icon: Sparkles,
     title: "Golden Visa (ARI)",
-    duration: "2-year residence permit, renewable",
     description:
-      "Residence-by-investment programme. Since 2023 real-estate routes are closed; eligible options include qualifying investment funds, scientific research, cultural heritage and job creation.",
-    whoFor: ["Investors in PT funds", "Cultural & R&D donors", "Job creators"],
+      "The Golden Visa is Portugal's residence-by-investment programme. It grants residency in exchange for qualifying contributions such as investment funds, scientific research, cultural heritage support or job creation.",
   },
 ];
 
