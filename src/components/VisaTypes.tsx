@@ -1,10 +1,7 @@
 import {
   Briefcase,
   GraduationCap,
-  HeartPulse,
-  Home,
   Laptop,
-  Search,
   Sparkles,
   Users,
   Wallet,
@@ -72,6 +69,16 @@ const visas: VisaCategory[] = [
   },
   {
     group: "Residency",
+    icon: GraduationCap,
+    title: "Higher Education Student Mobility Visa",
+    code: "D5",
+    duration: "Duration of the mobility programme",
+    description:
+      "For students moving to Portugal under a mobility programme between higher-education institutions, including EU and bilateral agreements.",
+    whoFor: ["Mobility-programme students", "Exchange scholars", "Joint-degree candidates"],
+  },
+  {
+    group: "Residency",
     icon: Users,
     title: "Family Reunification Visa",
     code: "D6",
@@ -108,42 +115,6 @@ const visas: VisaCategory[] = [
     description:
       "Residence-by-investment programme. Since 2023 real-estate routes are closed; eligible options include qualifying investment funds, scientific research, cultural heritage and job creation.",
     whoFor: ["Investors in PT funds", "Cultural & R&D donors", "Job creators"],
-  },
-  {
-    group: "Job Search",
-    icon: Search,
-    title: "Skilled Job Seeker Visa",
-    duration: "120 days, extendable by 60 (Law 61/2025)",
-    description:
-      "Updated in October 2025, this visa lets holders of specialised technical skills enter Portugal to look for and start qualified work before the residence permit is issued.",
-    whoFor: ["Highly qualified professionals", "Tech & STEM talent", "Specialised technicians"],
-  },
-  {
-    group: "Temporary",
-    icon: HeartPulse,
-    title: "Medical Treatment & Seasonal Stay",
-    duration: "Up to 1 year",
-    description:
-      "Short, purpose-bound stays for medical treatment, seasonal employment, transfer of athletes, or accompanying family members under treatment.",
-    whoFor: ["Patients & carers", "Seasonal workers", "Professional athletes"],
-  },
-  {
-    group: "Mobility",
-    icon: Home,
-    title: "CPLP Mobility Agreement",
-    duration: "1-year residence permit, renewable",
-    description:
-      "Simplified residency for nationals of Portuguese-speaking countries (Brazil, Angola, Cape Verde, Mozambique and others) under the CPLP Mobility Agreement.",
-    whoFor: ["CPLP-country nationals", "Lusophone professionals", "Students from CPLP states"],
-  },
-  {
-    group: "Mobility",
-    icon: Users,
-    title: "Youth Mobility Visa",
-    duration: "Up to 12 months",
-    description:
-      "Bilateral programmes allowing young people (typically 18–30) from partner countries to live and work in Portugal for cultural exchange.",
-    whoFor: ["Working-holiday applicants", "Eligible nationalities only", "Cultural exchange participants"],
   },
 ];
 
