@@ -109,7 +109,7 @@ const Onboarding = () => {
       errs.nif = "NIF must be exactly 9 digits";
     }
     if (!phone) errs.phone = "Phone number is required";
-    if (selectedServiceIds.length === 0) errs.services = "Please select at least one service";
+    if (selectedCategories.length === 0) errs.services = "Please select at least one service";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
