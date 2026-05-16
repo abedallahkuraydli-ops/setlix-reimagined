@@ -1,10 +1,7 @@
 import {
   Briefcase,
   GraduationCap,
-  HeartPulse,
-  Home,
   Laptop,
-  Search,
   Sparkles,
   Users,
   Wallet,
