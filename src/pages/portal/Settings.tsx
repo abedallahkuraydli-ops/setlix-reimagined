@@ -25,7 +25,6 @@ const Settings = () => {
   const [exporting, setExporting] = useState(false);
   const [deletionReason, setDeletionReason] = useState("");
   const [submittingDeletion, setSubmittingDeletion] = useState(false);
-  const [pendingDeletion, setPendingDeletion] = useState<boolean>(false);
   const [consents, setConsents] = useState<ConsentRecord[]>([]);
 
   useEffect(() => {
@@ -42,14 +41,6 @@ const Settings = () => {
           setPhone(data.phone_number || "");
         }
       });
-
-    supabase
-      .from("account_deletion_requests")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("status", "pending")
-      .maybeSingle()
-      .then(({ data }) => setPendingDeletion(!!data));
 
     listConsents(user.id).then(setConsents);
   }, [user]);
@@ -216,7 +207,7 @@ const Settings = () => {
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={pendingDeletion || submittingDeletion}>
+                <Button variant="destructive" size="sm" disabled={submittingDeletion}>
                   <Trash2 className="h-4 w-4 mr-1" />
                   Delete
                 </Button>
