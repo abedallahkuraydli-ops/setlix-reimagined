@@ -55,7 +55,7 @@ const Onboarding = () => {
       .from("service_catalogue")
       .select("id, name, category")
       .eq("active", true)
-      .eq("category", "Main Services")
+      .order("category")
       .order("name")
       .then(({ data }) => {
         if (data) setCatalogue(data);
