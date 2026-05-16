@@ -42,14 +42,6 @@ const Settings = () => {
         }
       });
 
-    supabase
-      .from("account_deletion_requests")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("status", "pending")
-      .maybeSingle()
-      .then(({ data }) => setPendingDeletion(!!data));
-
     listConsents(user.id).then(setConsents);
   }, [user]);
 
