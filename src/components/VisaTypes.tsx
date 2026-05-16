@@ -15,6 +15,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import VisaCard from "./VisaCard";
 
 type VisaCategory = {
   group: string;
