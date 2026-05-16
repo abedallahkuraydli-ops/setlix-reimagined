@@ -5,13 +5,10 @@ interface VisaCardProps {
   icon: LucideIcon;
   title: string;
   code?: string;
-  group: string;
-  duration: string;
   description: string;
-  whoFor: string[];
 }
 
-const VisaCard = ({ icon: Icon, title, code, group, duration, description, whoFor }: VisaCardProps) => {
+const VisaCard = ({ icon: Icon, title, code, description }: VisaCardProps) => {
   const [flipped, setFlipped] = useState(false);
 
   return (
@@ -44,23 +41,14 @@ const VisaCard = ({ icon: Icon, title, code, group, duration, description, whoFo
               {code}
             </span>
           )}
-          <p className="text-xs text-muted-foreground mt-3">{group} · {duration}</p>
         </div>
 
         {/* Back */}
         <div
-          className="absolute inset-0 bg-card rounded-xl border border-border p-6 overflow-auto"
+          className="absolute inset-0 bg-card rounded-xl border border-border p-6 flex items-center justify-center overflow-auto"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
-          <p className="text-muted-foreground text-sm mb-4 leading-relaxed">{description}</p>
-          <ul className="space-y-2">
-            {whoFor.map((w) => (
-              <li key={w} className="flex items-start gap-2 text-sm text-foreground/80">
-                <span className="text-primary mt-1 text-xs">●</span>
-                {w}
-              </li>
-            ))}
-          </ul>
+          <p className="text-muted-foreground text-sm leading-relaxed text-center">{description}</p>
         </div>
       </div>
     </div>
