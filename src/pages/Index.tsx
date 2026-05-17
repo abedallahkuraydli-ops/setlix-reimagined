@@ -5,6 +5,7 @@ import Features from "@/components/Features";
 import Services from "@/components/Services";
 import VisaTypes from "@/components/VisaTypes";
 import Stats from "@/components/Stats";
+import Partners from "@/components/Partners";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
@@ -20,6 +21,7 @@ const Index = () => {
       <Stats />
       <Services />
       <VisaTypes />
+      <Partners />
       <Contact />
       <Footer />
     </div>
