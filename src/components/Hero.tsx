@@ -19,18 +19,18 @@ const Hero = () => {
             />
           </defs>
           {Array.from({ length: 7 }).map((_, i) => (
-            <use
-              key={i}
-              href="#hero-wave"
-              stroke="hsl(var(--primary-foreground))"
-              strokeWidth={1.5}
-              strokeOpacity={0.18 + i * 0.05}
-              transform={`translate(0 ${(i - 3) * 55})`}
-              style={{
-                animation: `hero-wave-shift ${10 + i * 1.5}s ease-in-out ${i * -0.6}s infinite alternate`,
-                transformOrigin: "center",
-              }}
-            />
+            <g key={i} transform={`translate(0 ${(i - 3) * 55})`}>
+              <use
+                href="#hero-wave"
+                stroke="hsl(var(--primary-foreground))"
+                strokeWidth={1.5}
+                strokeOpacity={0.18 + i * 0.05}
+                style={{
+                  animation: `hero-wave-shift ${10 + i * 1.5}s ease-in-out ${i * -0.6}s infinite alternate`,
+                  transformOrigin: "center",
+                }}
+              />
+            </g>
           ))}
         </svg>
         <style>{`
