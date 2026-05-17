@@ -35,9 +35,9 @@ const Hero = () => {
         </svg>
         <style>{`
           @keyframes hero-wave-shift {
-            0%   { transform: translateY(var(--ty, 0)) translateX(0) scaleY(1); }
-            50%  { transform: translateY(var(--ty, 0)) translateX(-40px) scaleY(1.15); }
-            100% { transform: translateY(var(--ty, 0)) translateX(40px) scaleY(0.9); }
+            0%   { transform: translateX(0) scaleY(1); }
+            50%  { transform: translateX(-40px) scaleY(1.15); }
+            100% { transform: translateX(40px) scaleY(0.9); }
           }
         `}</style>
       </div>
