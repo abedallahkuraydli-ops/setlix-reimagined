@@ -3,43 +3,10 @@
 const Hero = () => {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center bg-primary overflow-hidden">
-      {/* Animated wave lines */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <svg
-          className="absolute inset-0 w-full h-full"
-          viewBox="0 0 1440 900"
-          preserveAspectRatio="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <path
-              id="hero-wave"
-              d="M0,450 C240,350 480,550 720,450 C960,350 1200,550 1440,450"
-              fill="none"
-            />
-          </defs>
-          {Array.from({ length: 7 }).map((_, i) => (
-            <g key={i} transform={`translate(0 ${(i - 3) * 55})`}>
-              <use
-                href="#hero-wave"
-                stroke="hsl(var(--primary-foreground))"
-                strokeWidth={1.5}
-                strokeOpacity={0.18 + i * 0.05}
-                style={{
-                  animation: `hero-wave-shift ${10 + i * 1.5}s ease-in-out ${i * -0.6}s infinite alternate`,
-                  transformOrigin: "center",
-                }}
-              />
-            </g>
-          ))}
-        </svg>
-        <style>{`
-          @keyframes hero-wave-shift {
-            0%   { transform: translateX(0) scaleY(1); }
-            50%  { transform: translateX(-40px) scaleY(1.15); }
-            100% { transform: translateX(40px) scaleY(0.9); }
-          }
-        `}</style>
+      {/* Animated pattern */}
+      <div className="absolute inset-0 opacity-25 pointer-events-none">
+        <div className="absolute top-1/4 right-0 w-[600px] h-[600px] border-[80px] border-primary-foreground/40 rotate-45 translate-x-1/3 animate-[spin_40s_linear_infinite] origin-center" />
+        <div className="absolute top-1/3 right-10 w-[400px] h-[400px] border-[60px] border-primary-foreground/30 rotate-45 translate-x-1/4 animate-[spin_25s_linear_infinite_reverse] origin-center" />
       </div>
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
