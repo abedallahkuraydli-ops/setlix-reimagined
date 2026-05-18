@@ -29,3 +29,7 @@ verify_jwt = false
 
 [functions.record-failed-login]
 verify_jwt = false
+
+[functions.notify-unread-messages]
+verify_jwt = false
+
