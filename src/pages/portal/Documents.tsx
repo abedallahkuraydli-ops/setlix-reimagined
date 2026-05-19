@@ -148,29 +148,39 @@ const Documents = () => {
   };
 
   const handleDownload = async (filePath: string, fileName?: string, documentId?: string) => {
-    const { data, error } = await supabase.storage.from("documents").createSignedUrl(filePath, 60);
-    if (error || !data?.signedUrl) {
-      toast({ title: "Download failed", variant: "destructive" });
-      return;
-    }
-    if (user) {
-      await logAudit({
-        action: "download",
-        actor_role: "client",
-        actor_user_id: user.id,
-        target_user_id: user.id,
-        document_id: documentId ?? null,
-        file_path: filePath,
-        file_name: fileName ?? null,
+    try {
+      const { data: blob, error } = await supabase.storage.from("documents").download(filePath);
+      if (error || !blob) {
+        toast({ title: "Download failed", description: error?.message, variant: "destructive" });
+        return;
+      }
+      if (user) {
+        await logAudit({
+          action: "download",
+          actor_role: "client",
+          actor_user_id: user.id,
+          target_user_id: user.id,
+          document_id: documentId ?? null,
+          file_path: filePath,
+          file_name: fileName ?? null,
+        });
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName || "document";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      toast({
+        title: "Download failed",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
       });
     }
-    const a = document.createElement("a");
-    a.href = data.signedUrl;
-    a.download = fileName || "document";
-    a.target = "_blank";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   };
 
   const handleRequestUpload = async (requestId: string, e: React.ChangeEvent<HTMLInputElement>) => {
