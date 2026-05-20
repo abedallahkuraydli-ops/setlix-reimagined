@@ -151,53 +151,49 @@ Deno.serve(async (req) => {
 
     console.log("Appointment booked", appt.id, "for profile", profile.id, body.reschedule_id ? `(rescheduled from ${body.reschedule_id})` : "");
 
-    // Fire-and-forget: send confirmation email with Meet link from admin profile
+    // Fire-and-forget: send confirmation email to client + notification to admin
     try {
-      // Resolve Meet link + admin display name
-      let meetLink: string | null = null;
-      let adminName: string | null = null;
+      // Resolve admin profile/user/email
+      let adminProfileRow: {
+        id: string;
+        user_id: string;
+        full_name: string | null;
+        company_name: string | null;
+        first_name: string | null;
+        last_name: string | null;
+      } | null = null;
+
       if (chosenAdminProfileId) {
         const { data: adminProfile } = await adminClient
           .from("profiles")
-          .select("meet_link, full_name, company_name, first_name, last_name")
+          .select("id, user_id, full_name, company_name, first_name, last_name")
           .eq("id", chosenAdminProfileId)
           .maybeSingle();
-        if (adminProfile) {
-          meetLink = adminProfile.meet_link ?? null;
-          adminName = adminProfile.company_name
-            || adminProfile.full_name
-            || [adminProfile.first_name, adminProfile.last_name].filter(Boolean).join(" ")
-            || null;
-        }
-      }
-      // Fallback: any admin with a meet_link from the bookable list
-      if (!meetLink) {
-        const { data: bookable } = await adminClient.rpc("bookable_admins_for_client", {
-          _client_profile_id: profile.id,
-        });
-        const withLink = (bookable ?? []).find((b: { meet_link: string | null }) => b.meet_link);
-        if (withLink) {
-          meetLink = (withLink as { meet_link: string }).meet_link;
-          if (!adminName) adminName = (withLink as { company_name: string | null }).company_name ?? null;
-        }
+        if (adminProfile) adminProfileRow = adminProfile as typeof adminProfileRow;
       }
 
+      const adminName = adminProfileRow?.company_name
+        || adminProfileRow?.full_name
+        || [adminProfileRow?.first_name, adminProfileRow?.last_name].filter(Boolean).join(" ")
+        || "Setlix Team";
+
+      const fmt = (d: Date) => new Intl.DateTimeFormat("en-GB", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+        timeZone: "Europe/Lisbon",
+      }).format(d);
+      const fmtEnd = (d: Date) => new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon",
+      }).format(d);
+
+      const clientName = profile.first_name
+        || profile.full_name
+        || (userData.user.user_metadata?.first_name as string | undefined)
+        || null;
+
+      // Client confirmation email — explicitly tells them the link comes later.
       const recipientEmail = userData.user.email;
       if (recipientEmail) {
-        const clientName = profile.first_name
-          || profile.full_name
-          || (userData.user.user_metadata?.first_name as string | undefined)
-          || null;
-
-        const fmt = (d: Date) => new Intl.DateTimeFormat("en-GB", {
-          weekday: "long", day: "numeric", month: "long", year: "numeric",
-          hour: "2-digit", minute: "2-digit",
-          timeZone: "Europe/Lisbon",
-        }).format(d);
-        const fmtEnd = (d: Date) => new Intl.DateTimeFormat("en-GB", {
-          hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon",
-        }).format(d);
-
         const { error: emailErr } = await adminClient.functions.invoke(
           "send-transactional-email",
           {
@@ -210,8 +206,8 @@ Deno.serve(async (req) => {
                 slotStartFormatted: fmt(slotStart),
                 slotEndFormatted: fmtEnd(slotEnd),
                 timezone: "Europe/Lisbon",
-                meetLink,
-                adminName: adminName ?? "Setlix Team",
+                // Intentionally omit meetLink — Setlix will send it closer to the date.
+                adminName,
                 notes: body.notes ?? null,
               },
             },
@@ -219,8 +215,65 @@ Deno.serve(async (req) => {
         );
         if (emailErr) console.error("appointment confirmation email failed", emailErr);
       }
+
+      // Admin notification — send to the admin the meeting was booked with.
+      // Fallback: notify all superadmins if no specific admin was selected.
+      const adminRecipients: { email: string; firstName: string | null }[] = [];
+
+      const resolveEmailForUser = async (uid: string) => {
+        try {
+          const { data: u } = await adminClient.auth.admin.getUserById(uid);
+          return u?.user?.email ?? null;
+        } catch (_) {
+          return null;
+        }
+      };
+
+      if (adminProfileRow?.user_id) {
+        const email = await resolveEmailForUser(adminProfileRow.user_id);
+        if (email) {
+          adminRecipients.push({ email, firstName: adminProfileRow.first_name });
+        }
+      } else {
+        const { data: supers } = await adminClient
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "superadmin");
+        for (const r of supers ?? []) {
+          const email = await resolveEmailForUser((r as { user_id: string }).user_id);
+          if (!email) continue;
+          const { data: superProfile } = await adminClient
+            .from("profiles")
+            .select("first_name")
+            .eq("user_id", (r as { user_id: string }).user_id)
+            .maybeSingle();
+          adminRecipients.push({ email, firstName: superProfile?.first_name ?? null });
+        }
+        if (adminRecipients.length === 0) {
+          adminRecipients.push({ email: "info@setlix.pt", firstName: null });
+        }
+      }
+
+      await Promise.all(adminRecipients.map((r) =>
+        adminClient.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "appointment-admin-notification",
+            recipientEmail: r.email,
+            idempotencyKey: `appointment-admin-${appt.id}-${r.email}`,
+            templateData: {
+              adminFirstName: r.firstName,
+              clientName: clientName || profile.full_name || "A client",
+              clientEmail: userData.user.email ?? null,
+              slotStartFormatted: fmt(slotStart),
+              slotEndFormatted: fmtEnd(slotEnd),
+              timezone: "Europe/Lisbon",
+              notes: body.notes ?? null,
+            },
+          },
+        }).catch((err) => console.error("admin appt notification failed", r.email, err))
+      ));
     } catch (emailEx) {
-      console.error("appointment confirmation email exception", emailEx);
+      console.error("appointment email exception", emailEx);
     }
 
     return new Response(JSON.stringify({ appointment: appt }), {
