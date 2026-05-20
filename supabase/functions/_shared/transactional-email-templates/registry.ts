@@ -18,6 +18,7 @@ import { template as clientAccountUpdate } from './client-account-update.tsx'
 import { template as accountLocked } from './account-locked.tsx'
 import { template as dataErasureRequest } from './data-erasure-request.tsx'
 import { template as unreadMessageReminder } from './unread-message-reminder.tsx'
+import { template as appointmentAdminNotification } from './appointment-admin-notification.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-confirmation': contactConfirmation,
@@ -29,4 +30,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'account-locked': accountLocked,
   'data-erasure-request': dataErasureRequest,
   'unread-message-reminder': unreadMessageReminder,
+  'appointment-admin-notification': appointmentAdminNotification,
 }
