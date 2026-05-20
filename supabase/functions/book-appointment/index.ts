@@ -197,6 +197,7 @@ Deno.serve(async (req) => {
         const { error: emailErr } = await adminClient.functions.invoke(
           "send-transactional-email",
           {
+            headers: { Authorization: authHeader },
             body: {
               templateName: "appointment-confirmation",
               recipientEmail,
@@ -215,6 +216,7 @@ Deno.serve(async (req) => {
         );
         if (emailErr) console.error("appointment confirmation email failed", emailErr);
       }
+
 
       // Admin notification — send to the admin the meeting was booked with.
       // Fallback: notify all superadmins if no specific admin was selected.
@@ -256,6 +258,7 @@ Deno.serve(async (req) => {
 
       await Promise.all(adminRecipients.map((r) =>
         adminClient.functions.invoke("send-transactional-email", {
+          headers: { Authorization: authHeader },
           body: {
             templateName: "appointment-admin-notification",
             recipientEmail: r.email,
