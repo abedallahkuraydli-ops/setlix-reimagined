@@ -258,6 +258,7 @@ Deno.serve(async (req) => {
 
       await Promise.all(adminRecipients.map((r) =>
         adminClient.functions.invoke("send-transactional-email", {
+          headers: { Authorization: authHeader },
           body: {
             templateName: "appointment-admin-notification",
             recipientEmail: r.email,
