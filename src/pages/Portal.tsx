@@ -3,6 +3,7 @@ import { Navigate, Routes, Route, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { PortalSidebar } from "@/components/portal/PortalSidebar";
 import { PortalHeader } from "@/components/portal/PortalHeader";
+import { ServiceDecisionDialog } from "@/components/portal/ServiceDecisionDialog";
 import { useRole } from "@/hooks/useRole";
 import { supabase } from "@/integrations/supabase/client";
 import Onboarding from "@/pages/Onboarding";
@@ -28,6 +29,7 @@ const PortalShell = ({ children }: { children: React.ReactNode }) => (
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
+        <ServiceDecisionDialog />
       </div>
     </div>
   </SidebarProvider>
