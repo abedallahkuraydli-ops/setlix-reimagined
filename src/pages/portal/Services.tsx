@@ -98,14 +98,14 @@ const Services = () => {
 
   useEffect(() => {
     if (!user) return;
-    let profileId: string | null = null;
+    let localProfileId: string | null = null;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const fetchServices = async () => {
       const { data } = await supabase
         .from("client_services")
         .select("id, status, progress_percentage, price_cents, quantity, vat_rate, currency, payment_status, service_catalogue(name, category)")
-        .eq("client_id", profileId!)
+        .eq("client_id", localProfileId!)
         .order("created_at", { ascending: false });
       if (data) setServices(data as any);
       setLoading(false);
@@ -118,14 +118,15 @@ const Services = () => {
         .eq("user_id", user.id)
         .single();
       if (!profile) { setLoading(false); return; }
-      profileId = profile.id;
+      localProfileId = profile.id;
+      setProfileId(profile.id);
       await fetchServices();
 
       channel = supabase
-        .channel(`client-services-${profileId}-${Math.random().toString(36).slice(2)}`)
+        .channel(`client-services-${localProfileId}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${profileId}` },
+          { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${localProfileId}` },
           () => { fetchServices(); }
         )
         .subscribe();
