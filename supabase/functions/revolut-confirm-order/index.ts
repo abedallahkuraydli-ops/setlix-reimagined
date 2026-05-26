@@ -1,7 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const REVOLUT_BASE = 'https://sandbox-merchant.revolut.com'
+const LIVE_KEY = Deno.env.get('REVOLUT_SECRET_KEY')
+const REVOLUT_BASE = LIVE_KEY ? 'https://merchant.revolut.com' : 'https://sandbox-merchant.revolut.com'
 const REVOLUT_API_VERSION = '2024-09-01'
 
 Deno.serve(async (req) => {
@@ -27,7 +28,7 @@ Deno.serve(async (req) => {
     const invoiceId = body?.invoice_id
     if (!orderId || !invoiceId) return json({ error: 'order_id and invoice_id required' }, 400)
 
-    const secretKey = Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')
+    const secretKey = LIVE_KEY || Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')
     if (!secretKey) return json({ error: 'Payment provider not configured' }, 500)
 
     const admin = createClient(
