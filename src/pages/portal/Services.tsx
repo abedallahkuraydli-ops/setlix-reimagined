@@ -51,10 +51,50 @@ const fmt = (cents: number, ccy: string) =>
 
 const Services = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { isSigned, loading: contractLoading } = useContractStatus();
   const [services, setServices] = useState<ClientServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payOpen, setPayOpen] = useState(false);
+  const [payInvoiceId, setPayInvoiceId] = useState<string | null>(null);
+  const [payLabel, setPayLabel] = useState("");
+  const [payDescription, setPayDescription] = useState("");
+  const [payingServiceId, setPayingServiceId] = useState<string | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
+
+  const startPayment = async (s: ClientServiceRow) => {
+    setPayingServiceId(s.id);
+    try {
+      const { data: invoiceId, error } = await supabase.rpc(
+        "get_or_create_invoice_for_service",
+        { _client_service_id: s.id }
+      );
+      if (error) throw error;
+      if (!invoiceId) throw new Error("Could not prepare invoice");
+      const ccy = s.currency || "EUR";
+      const qty = s.quantity || 1;
+      const total = (s.price_cents || 0) * qty;
+      setPayInvoiceId(invoiceId as unknown as string);
+      setPayLabel(new Intl.NumberFormat("pt-PT", { style: "currency", currency: ccy }).format(total / 100));
+      setPayDescription(s.service_catalogue?.name || "Service");
+      setPayOpen(true);
+    } catch (e: any) {
+      toast({ title: "Could not start payment", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setPayingServiceId(null);
+    }
+  };
+
+  const refetchServices = async () => {
+    if (!profileId) return;
+    const { data } = await supabase
+      .from("client_services")
+      .select("id, status, progress_percentage, price_cents, quantity, vat_rate, currency, payment_status, service_catalogue(name, category)")
+      .eq("client_id", profileId)
+      .order("created_at", { ascending: false });
+    if (data) setServices(data as any);
+  };
 
   useEffect(() => {
     if (!user) return;
