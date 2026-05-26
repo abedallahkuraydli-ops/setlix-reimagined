@@ -159,7 +159,7 @@ const Payments = () => {
             {outstanding.count > 0 && (
               <Button size="lg" onClick={handlePayOutstanding} className="shrink-0">
                 <CreditCard className="h-4 w-4 mr-2" />
-                Pay with Revolut
+                Pay with card
               </Button>
             )}
           </div>
