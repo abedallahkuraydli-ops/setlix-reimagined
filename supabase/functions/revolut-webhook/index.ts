@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
   // Fetch authoritative order state from Revolut
   const orderRes = await fetch(`${REVOLUT_BASE}/api/orders/${orderId}`, {
     headers: {
-      Authorization: `Bearer ${Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')}`,
+      Authorization: `Bearer ${LIVE_KEY || Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')}`,
       'Revolut-Api-Version': REVOLUT_API_VERSION,
     },
   })
