@@ -1,7 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const REVOLUT_BASE = 'https://sandbox-merchant.revolut.com'
+const LIVE_KEY = Deno.env.get('REVOLUT_SECRET_KEY')
+const IS_LIVE = !!LIVE_KEY
+const REVOLUT_BASE = IS_LIVE ? 'https://merchant.revolut.com' : 'https://sandbox-merchant.revolut.com'
+const REVOLUT_ENV = IS_LIVE ? 'live' : 'sandbox'
 const REVOLUT_API_VERSION = '2024-09-01'
 
 Deno.serve(async (req) => {
