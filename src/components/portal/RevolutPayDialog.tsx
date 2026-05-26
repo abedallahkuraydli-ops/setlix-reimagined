@@ -100,11 +100,12 @@ export const RevolutPayDialog = ({
         if (fnErr) throw new Error(fnErr.message || "Failed to start payment");
         if (!data?.token) throw new Error("No payment token returned");
         orderIdRef.current = data.order_id ?? null;
+        const env: "sandbox" | "prod" = data.environment === "live" ? "prod" : "sandbox";
 
-        await loadRevolutScript();
+        await loadRevolutScript(env);
         if (cancelled) return;
 
-        const RC = await window.RevolutCheckout!(data.token, "sandbox");
+        const RC = await window.RevolutCheckout!(data.token, env);
         if (cancelled) return;
 
         await new Promise((r) => setTimeout(r, 50));
