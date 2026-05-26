@@ -104,12 +104,12 @@ Deno.serve(async (req) => {
       .update({
         revolut_order_id: orderId,
         revolut_order_token: token,
-        revolut_environment: 'sandbox',
+        revolut_environment: REVOLUT_ENV,
         revolut_state: state,
       })
       .eq('id', invoice.id)
 
-    return json({ order_id: orderId, token, environment: 'sandbox' })
+    return json({ order_id: orderId, token, environment: REVOLUT_ENV })
   } catch (e) {
     console.error('revolut-create-order error', e)
     return json({ error: 'Internal error' }, 500)
