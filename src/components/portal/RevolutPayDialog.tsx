@@ -102,6 +102,7 @@ export const RevolutPayDialog = ({
         if (!data?.token) throw new Error("No payment token returned");
         orderIdRef.current = data.order_id ?? null;
         const env: "sandbox" | "prod" = data.environment === "live" ? "prod" : "sandbox";
+        setIsLive(env === "prod");
 
         await loadRevolutScript(env);
         if (cancelled) return;
