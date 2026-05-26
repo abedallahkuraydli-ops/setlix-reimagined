@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Building2, Copy, Info } from "lucide-react";
+import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Building2, Copy, Info, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { RevolutPayDialog } from "@/components/portal/RevolutPayDialog";
+
 
 interface Invoice {
   id: string;
@@ -42,6 +44,9 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [clientFullName, setClientFullName] = useState<string>("");
   const [bank, setBank] = useState<BankDetails>(FALLBACK_BANK);
+  const [payOpen, setPayOpen] = useState(false);
+  const [activeInvoice, setActiveInvoice] = useState<Invoice | null>(null);
+
 
   useEffect(() => {
     // Use the RPC helper that exposes only bank fields (not the full
@@ -109,21 +114,21 @@ const Payments = () => {
         <p className="text-muted-foreground text-sm mt-1">Pay outstanding invoices and review your payment history.</p>
       </div>
 
-      {/* Bank transfer notice — temporary while online payments are being integrated */}
-      <section className="mb-8 rounded-xl border border-primary/20 bg-primary/5 p-5 md:p-6">
+      {/* Bank transfer — alternative to online card payment */}
+      <section className="mb-8 rounded-xl border border-border bg-card p-5 md:p-6">
         <div className="flex items-start gap-3 mb-4">
           <div className="rounded-lg bg-primary/10 p-2 shrink-0">
             <Info className="h-4 w-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">Online payments coming soon</h2>
+            <h2 className="text-sm font-semibold text-foreground">Prefer bank transfer?</h2>
             <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-              Setlix is currently working on integrating an online payment system into the portal.
-              Until that is ready, payments can only be made via regular bank transfer using the
-              details below.
+              You can also pay any invoice by SEPA bank transfer using the details below.
+              Online card payment (above each invoice) is faster — funds clear instantly.
             </p>
           </div>
         </div>
+
 
         <div className="grid sm:grid-cols-2 gap-3 mb-4">
           {[
@@ -199,8 +204,8 @@ const Payments = () => {
             ) : (
               <div className="bg-card border border-border rounded-xl divide-y divide-border overflow-hidden">
                 {pending.map((inv) => (
-                  <div key={inv.id} className="flex items-center gap-4 p-4">
-                    <div className="flex-1 min-w-0">
+                  <div key={inv.id} className="flex flex-wrap items-center gap-3 p-4">
+                    <div className="flex-1 min-w-[180px]">
                       <p className="text-sm font-medium text-foreground">{inv.description}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {new Date(inv.created_at).toLocaleDateString("pt-PT")}
@@ -208,12 +213,18 @@ const Payments = () => {
                       </p>
                     </div>
                     <div className="text-sm font-semibold text-foreground">{fmt(inv.amount_cents, inv.currency)}</div>
-                    <Badge variant="outline" className="text-[10px]">Bank transfer</Badge>
+                    <Button
+                      size="sm"
+                      onClick={() => { setActiveInvoice(inv); setPayOpen(true); }}
+                    >
+                      <CreditCard className="h-3.5 w-3.5 mr-1.5" /> Pay online
+                    </Button>
                   </div>
                 ))}
               </div>
             )}
           </section>
+
 
           <section>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">History</h2>
@@ -249,8 +260,17 @@ const Payments = () => {
         </>
       )}
 
+      <RevolutPayDialog
+        open={payOpen}
+        onOpenChange={setPayOpen}
+        invoiceId={activeInvoice?.id ?? null}
+        amountLabel={activeInvoice ? fmt(activeInvoice.amount_cents, activeInvoice.currency) : ""}
+        description={activeInvoice?.description ?? ""}
+        onPaid={fetchInvoices}
+      />
     </div>
   );
 };
 
 export default Payments;
+
