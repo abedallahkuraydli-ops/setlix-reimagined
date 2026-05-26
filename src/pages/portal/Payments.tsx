@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Building2, Copy, Info, CreditCard } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Building2, Copy, Info, CreditCard, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
