@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Briefcase, Loader2, Plus, Building2 } from "lucide-react";
+import { Briefcase, Loader2, Plus, Building2, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ContractBanner } from "@/components/portal/ContractBanner";
 import { useContractStatus } from "@/hooks/useContractStatus";
+import { RevolutPayDialog } from "@/components/portal/RevolutPayDialog";
 
 interface ClientServiceRow {
   id: string;
@@ -49,21 +51,61 @@ const fmt = (cents: number, ccy: string) =>
 
 const Services = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { isSigned, loading: contractLoading } = useContractStatus();
   const [services, setServices] = useState<ClientServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payOpen, setPayOpen] = useState(false);
+  const [payInvoiceId, setPayInvoiceId] = useState<string | null>(null);
+  const [payLabel, setPayLabel] = useState("");
+  const [payDescription, setPayDescription] = useState("");
+  const [payingServiceId, setPayingServiceId] = useState<string | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
+
+  const startPayment = async (s: ClientServiceRow) => {
+    setPayingServiceId(s.id);
+    try {
+      const { data: invoiceId, error } = await supabase.rpc(
+        "get_or_create_invoice_for_service",
+        { _client_service_id: s.id }
+      );
+      if (error) throw error;
+      if (!invoiceId) throw new Error("Could not prepare invoice");
+      const ccy = s.currency || "EUR";
+      const qty = s.quantity || 1;
+      const total = (s.price_cents || 0) * qty;
+      setPayInvoiceId(invoiceId as unknown as string);
+      setPayLabel(new Intl.NumberFormat("pt-PT", { style: "currency", currency: ccy }).format(total / 100));
+      setPayDescription(s.service_catalogue?.name || "Service");
+      setPayOpen(true);
+    } catch (e: any) {
+      toast({ title: "Could not start payment", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setPayingServiceId(null);
+    }
+  };
+
+  const refetchServices = async () => {
+    if (!profileId) return;
+    const { data } = await supabase
+      .from("client_services")
+      .select("id, status, progress_percentage, price_cents, quantity, vat_rate, currency, payment_status, service_catalogue(name, category)")
+      .eq("client_id", profileId)
+      .order("created_at", { ascending: false });
+    if (data) setServices(data as any);
+  };
 
   useEffect(() => {
     if (!user) return;
-    let profileId: string | null = null;
+    let localProfileId: string | null = null;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const fetchServices = async () => {
       const { data } = await supabase
         .from("client_services")
         .select("id, status, progress_percentage, price_cents, quantity, vat_rate, currency, payment_status, service_catalogue(name, category)")
-        .eq("client_id", profileId!)
+        .eq("client_id", localProfileId!)
         .order("created_at", { ascending: false });
       if (data) setServices(data as any);
       setLoading(false);
@@ -76,14 +118,15 @@ const Services = () => {
         .eq("user_id", user.id)
         .single();
       if (!profile) { setLoading(false); return; }
-      profileId = profile.id;
+      localProfileId = profile.id;
+      setProfileId(profile.id);
       await fetchServices();
 
       channel = supabase
-        .channel(`client-services-${profileId}-${Math.random().toString(36).slice(2)}`)
+        .channel(`client-services-${localProfileId}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${profileId}` },
+          { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${localProfileId}` },
           () => { fetchServices(); }
         )
         .subscribe();
@@ -192,10 +235,18 @@ const Services = () => {
                   <span className="text-sm font-medium text-muted-foreground">{s.progress_percentage}%</span>
                 </div>
                 {canPay && (
-                  <div className="flex justify-end pt-1">
+                  <div className="flex flex-wrap justify-end gap-2 pt-1">
                     <Button size="sm" variant="outline" onClick={() => navigate("/portal/payments")}>
                       <Building2 className="h-4 w-4 mr-1" />
-                      Bank transfer details
+                      Bank transfer
+                    </Button>
+                    <Button size="sm" onClick={() => startPayment(s)} disabled={payingServiceId === s.id}>
+                      {payingServiceId === s.id ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <CreditCard className="h-4 w-4 mr-1" />
+                      )}
+                      Pay with card
                     </Button>
                   </div>
                 )}
@@ -206,6 +257,14 @@ const Services = () => {
       )}
       </div>
 
+      <RevolutPayDialog
+        open={payOpen}
+        onOpenChange={setPayOpen}
+        invoiceId={payInvoiceId}
+        amountLabel={payLabel}
+        description={payDescription}
+        onPaid={refetchServices}
+      />
     </div>
   );
 };
