@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const REVOLUT_EMBED_SRC = "https://sandbox-merchant.revolut.com/embed.js";
+const REVOLUT_EMBED_SRC_SANDBOX = "https://sandbox-merchant.revolut.com/embed.js";
+const REVOLUT_EMBED_SRC_PROD = "https://merchant.revolut.com/embed.js";
 
 declare global {
   interface Window {
@@ -19,11 +20,12 @@ declare global {
   }
 }
 
-function loadRevolutScript(): Promise<void> {
+function loadRevolutScript(env: "sandbox" | "prod"): Promise<void> {
+  const src = env === "prod" ? REVOLUT_EMBED_SRC_PROD : REVOLUT_EMBED_SRC_SANDBOX;
   return new Promise((resolve, reject) => {
     if (window.RevolutCheckout) return resolve();
     const existing = document.querySelector<HTMLScriptElement>(
-      `script[src="${REVOLUT_EMBED_SRC}"]`
+      `script[src="${src}"]`
     );
     if (existing) {
       existing.addEventListener("load", () => resolve());
@@ -31,7 +33,7 @@ function loadRevolutScript(): Promise<void> {
       return;
     }
     const s = document.createElement("script");
-    s.src = REVOLUT_EMBED_SRC;
+    s.src = src;
     s.async = true;
     s.onload = () => resolve();
     s.onerror = () => reject(new Error("Revolut script failed to load"));
