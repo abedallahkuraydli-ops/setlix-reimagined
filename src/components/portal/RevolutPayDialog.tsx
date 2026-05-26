@@ -59,6 +59,7 @@ export const RevolutPayDialog = ({
   const { toast } = useToast();
   const cardTargetRef = useRef<HTMLDivElement | null>(null);
   const instanceRef = useRef<any>(null);
+  const orderIdRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -66,6 +67,25 @@ export const RevolutPayDialog = ({
   useEffect(() => {
     if (!open || !invoiceId) return;
     let cancelled = false;
+
+    const confirmPayment = async () => {
+      if (!orderIdRef.current || !invoiceId) return;
+      try {
+        const { data, error: fnErr } = await supabase.functions.invoke(
+          "revolut-confirm-order",
+          { body: { order_id: orderIdRef.current, invoice_id: invoiceId } }
+        );
+        if (fnErr) throw new Error(fnErr.message || "Could not confirm payment");
+        if (!data?.paid) throw new Error("Payment not completed");
+        toast({ title: "Payment successful", description: "Thank you!" });
+        onPaid();
+        onOpenChange(false);
+      } catch (e: any) {
+        console.error("confirm error", e);
+        setError(e?.message || "Payment received but confirmation failed. Please contact support.");
+        setSubmitting(false);
+      }
+    };
 
     const init = async () => {
       setLoading(true);
@@ -77,6 +97,7 @@ export const RevolutPayDialog = ({
         );
         if (fnErr) throw new Error(fnErr.message || "Failed to start payment");
         if (!data?.token) throw new Error("No payment token returned");
+        orderIdRef.current = data.order_id ?? null;
 
         await loadRevolutScript();
         if (cancelled) return;
@@ -84,7 +105,6 @@ export const RevolutPayDialog = ({
         const RC = await window.RevolutCheckout!(data.token, "sandbox");
         if (cancelled) return;
 
-        // Give the dialog a tick to mount the target div
         await new Promise((r) => setTimeout(r, 50));
         if (!cardTargetRef.current) return;
 
@@ -98,19 +118,13 @@ export const RevolutPayDialog = ({
               fontSize: "14px",
             },
           },
-          onSuccess: () => {
-            toast({ title: "Payment successful", description: "Thank you!" });
-            onPaid();
-            onOpenChange(false);
-          },
+          onSuccess: () => { confirmPayment(); },
           onError: (err: any) => {
             console.error("Revolut payment error", err);
             setError(err?.message || "Payment failed. Please try again.");
             setSubmitting(false);
           },
-          onCancel: () => {
-            setSubmitting(false);
-          },
+          onCancel: () => { setSubmitting(false); },
         });
       } catch (e: any) {
         console.error(e);
