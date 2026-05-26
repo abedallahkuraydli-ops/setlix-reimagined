@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   const rawBody = await req.text()
   const signatureHeader = req.headers.get('Revolut-Signature') || ''
   const timestamp = req.headers.get('Revolut-Request-Timestamp') || ''
-  const signingSecret = Deno.env.get('REVOLUT_SANDBOX_WEBHOOK_SECRET')
+  const signingSecret = Deno.env.get('REVOLUT_WEBHOOK_SECRET') || Deno.env.get('REVOLUT_SANDBOX_WEBHOOK_SECRET')
 
   if (!signingSecret) {
     console.error('Webhook secret missing')
