@@ -235,10 +235,18 @@ const Services = () => {
                   <span className="text-sm font-medium text-muted-foreground">{s.progress_percentage}%</span>
                 </div>
                 {canPay && (
-                  <div className="flex justify-end pt-1">
+                  <div className="flex flex-wrap justify-end gap-2 pt-1">
                     <Button size="sm" variant="outline" onClick={() => navigate("/portal/payments")}>
                       <Building2 className="h-4 w-4 mr-1" />
-                      Bank transfer details
+                      Bank transfer
+                    </Button>
+                    <Button size="sm" onClick={() => startPayment(s)} disabled={payingServiceId === s.id}>
+                      {payingServiceId === s.id ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <CreditCard className="h-4 w-4 mr-1" />
+                      )}
+                      Pay with card
                     </Button>
                   </div>
                 )}
@@ -249,8 +257,18 @@ const Services = () => {
       )}
       </div>
 
+      <RevolutPayDialog
+        open={payOpen}
+        onOpenChange={setPayOpen}
+        invoiceId={payInvoiceId}
+        amountLabel={payLabel}
+        description={payDescription}
+        onPaid={refetchServices}
+      />
     </div>
   );
 };
+
+export default Services;
 
 export default Services;
