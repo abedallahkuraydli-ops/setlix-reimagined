@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const invoiceId = body?.invoice_id
     if (!orderId || !invoiceId) return json({ error: 'order_id and invoice_id required' }, 400)
 
-    const secretKey = Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')
+    const secretKey = LIVE_KEY || Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')
     if (!secretKey) return json({ error: 'Payment provider not configured' }, 500)
 
     const admin = createClient(
