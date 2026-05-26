@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Briefcase, Loader2, Plus, Building2 } from "lucide-react";
+import { Briefcase, Loader2, Plus, Building2, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ContractBanner } from "@/components/portal/ContractBanner";
 import { useContractStatus } from "@/hooks/useContractStatus";
+import { RevolutPayDialog } from "@/components/portal/RevolutPayDialog";
 
 interface ClientServiceRow {
   id: string;
