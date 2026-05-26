@@ -188,7 +188,7 @@ export const RevolutPayDialog = ({
 
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-          Payments processed securely by Revolut Business. Test mode — no real charge.
+          Payments processed securely by Revolut Business.{!isLive && " Test mode — no real charge."}
         </div>
 
         <Button
