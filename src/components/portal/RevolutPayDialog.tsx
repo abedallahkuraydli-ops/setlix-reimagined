@@ -65,6 +65,7 @@ export const RevolutPayDialog = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [isLive, setIsLive] = useState(true);
 
   useEffect(() => {
     if (!open || !invoiceId) return;
