@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       return json({
         order_id: invoice.revolut_order_id,
         token: invoice.revolut_order_token,
-        environment: 'sandbox',
+        environment: REVOLUT_ENV,
       })
     }
 
