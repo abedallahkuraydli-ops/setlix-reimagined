@@ -96,7 +96,8 @@ const countries = [
 ];
 
 const categories = [
-  "Startup", "Digital Nomad", "Freelancer", "Golden Visa Support", "Immigration Support"
+  "Startup", "Digital Nomad", "Freelancer", "Golden Visa Support", "Immigration Support",
+  "Relocation Package", "Setup Package", "Admin Package", "Marketing Package"
 ];
 
 const Contact = () => {
