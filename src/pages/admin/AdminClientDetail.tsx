@@ -659,11 +659,11 @@ const AdminClientDetail = () => {
         clientName={profile.full_name || profile.first_name || "this client"}
       />
 
-      {/* Billing */}
-      <AdminBillingSection clientId={profile.id} />
+      {/* Billing — superadmin only */}
+      {isSuperadmin && <AdminBillingSection clientId={profile.id} />}
 
-      {/* Invoices & Payments */}
-      <AdminInvoicesSection clientId={profile.id} clientUserId={profile.user_id} />
+      {/* Invoices & Payments — superadmin only */}
+      {isSuperadmin && <AdminInvoicesSection clientId={profile.id} clientUserId={profile.user_id} />}
 
       {/* Monthly transactions (superadmin only) */}
       {isSuperadmin && <ClientMonthlyTransactions clientId={profile.id} />}
