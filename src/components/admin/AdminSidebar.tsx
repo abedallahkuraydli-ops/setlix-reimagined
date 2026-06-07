@@ -19,7 +19,7 @@ const baseItems = [
   { title: "Clients", url: "/admin/clients", icon: Users },
   { title: "Services Catalogue", url: "/admin/services", icon: BookOpen, superOnly: true },
   { title: "Appointments", url: "/admin/appointments", icon: Calendar },
-  { title: "Messages", url: "/admin/messages", icon: MessageSquare, superOnly: true },
+  { title: "Messages", url: "/admin/messages", icon: MessageSquare },
   { title: "Surveys", url: "/admin/surveys", icon: ClipboardList, superOnly: true },
   { title: "Admin Management", url: "/admin/admins", icon: ShieldCheck, superOnly: true },
   { title: "Locked Accounts", url: "/admin/locked-accounts", icon: Lock, superOnly: true },
