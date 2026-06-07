@@ -954,6 +954,10 @@ export type Database = {
           notes: string | null
           paid_at: string | null
           refunded_amount_cents: number
+          revolut_environment: string | null
+          revolut_order_id: string | null
+          revolut_order_token: string | null
+          revolut_state: string | null
           status: Database["public"]["Enums"]["invoice_status"]
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
@@ -978,6 +982,10 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           refunded_amount_cents?: number
+          revolut_environment?: string | null
+          revolut_order_id?: string | null
+          revolut_order_token?: string | null
+          revolut_state?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -1002,6 +1010,10 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           refunded_amount_cents?: number
+          revolut_environment?: string | null
+          revolut_order_id?: string | null
+          revolut_order_token?: string | null
+          revolut_state?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -1737,6 +1749,10 @@ export type Database = {
           bank_iban: string
           bank_name: string
         }[]
+      }
+      get_or_create_invoice_for_service: {
+        Args: { _client_service_id: string }
+        Returns: string
       }
       has_admin_permission: {
         Args: {
