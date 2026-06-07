@@ -28,7 +28,7 @@ const Admin = () => (
             <Route path="clients/:clientId" element={<AdminClientDetail />} />
             <Route path="appointments" element={<AdminAppointments />} />
             <Route path="services" element={<SuperadminRoute><AdminServicesCatalogue /></SuperadminRoute>} />
-            <Route path="messages" element={<SuperadminRoute><AdminMessages /></SuperadminRoute>} />
+            <Route path="messages" element={<AdminMessages />} />
             <Route path="settings" element={<SuperadminRoute><AdminSettings /></SuperadminRoute>} />
             <Route path="breach-procedure" element={<SuperadminRoute><AdminBreachProcedure /></SuperadminRoute>} />
             <Route path="admins" element={<SuperadminRoute><AdminManagement /></SuperadminRoute>} />
