@@ -240,15 +240,6 @@ const ServicesPage = () => {
       </section>
 
       <Contact />
-              );
-            })}
-          </div>
-
-          <p className="text-center text-muted-foreground text-xs mt-10 max-w-2xl mx-auto">
-            All package prices are starting points and may vary based on your specific situation. Contact us for a tailored quote.
-          </p>
-        </div>
-      </section>
 
       <Footer />
     </div>
