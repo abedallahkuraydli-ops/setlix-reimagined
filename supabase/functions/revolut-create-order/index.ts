@@ -1,10 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const LIVE_KEY = Deno.env.get('REVOLUT_SECRET_KEY')
-const IS_LIVE = !!LIVE_KEY
-const REVOLUT_BASE = IS_LIVE ? 'https://merchant.revolut.com' : 'https://sandbox-merchant.revolut.com'
-const REVOLUT_ENV = IS_LIVE ? 'live' : 'sandbox'
+const REVOLUT_BASE = 'https://sandbox-merchant.revolut.com'
 const REVOLUT_API_VERSION = '2024-09-01'
 
 Deno.serve(async (req) => {
@@ -34,7 +31,7 @@ Deno.serve(async (req) => {
       return json({ error: 'invoice_id required' }, 400)
     }
 
-    const secretKey = LIVE_KEY || Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')
+    const secretKey = Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')
     if (!secretKey) return json({ error: 'Payment provider not configured' }, 500)
 
     // Service-role client to read invoice + verify ownership
@@ -68,7 +65,7 @@ Deno.serve(async (req) => {
       return json({
         order_id: invoice.revolut_order_id,
         token: invoice.revolut_order_token,
-        environment: REVOLUT_ENV,
+        environment: 'sandbox',
       })
     }
 
@@ -104,12 +101,12 @@ Deno.serve(async (req) => {
       .update({
         revolut_order_id: orderId,
         revolut_order_token: token,
-        revolut_environment: REVOLUT_ENV,
+        revolut_environment: 'sandbox',
         revolut_state: state,
       })
       .eq('id', invoice.id)
 
-    return json({ order_id: orderId, token, environment: REVOLUT_ENV })
+    return json({ order_id: orderId, token, environment: 'sandbox' })
   } catch (e) {
     console.error('revolut-create-order error', e)
     return json({ error: 'Internal error' }, 500)

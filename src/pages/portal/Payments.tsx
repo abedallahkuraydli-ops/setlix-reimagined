@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Building2, Copy, Info, CreditCard, Wallet } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, ExternalLink, CheckCircle2, AlertCircle, Building2, Copy, Info, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,65 +107,12 @@ const Payments = () => {
   const pending = invoices.filter((i) => i.status === "pending" || i.status === "failed");
   const history = invoices.filter((i) => i.status === "paid" || i.status === "refunded");
 
-  const outstanding = useMemo(() => {
-    const currency = pending[0]?.currency || "EUR";
-    const total = pending.reduce((sum, i) => sum + (i.amount_cents || 0), 0);
-    return { total, currency, count: pending.length };
-  }, [pending]);
-
-  const oldestPending = useMemo(
-    () => (pending.length ? [...pending].sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at))[0] : null),
-    [pending]
-  );
-
-  const handlePayOutstanding = () => {
-    if (!oldestPending) return;
-    setActiveInvoice(oldestPending);
-    setPayOpen(true);
-  };
-
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto w-full animate-in fade-in duration-500">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Payments</h1>
         <p className="text-muted-foreground text-sm mt-1">Pay outstanding invoices and review your payment history.</p>
       </div>
-
-      {/* Outstanding balance — top hero card */}
-      {!loading && (
-        <section className="mb-6 rounded-xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 md:p-6">
-          <div className="flex flex-wrap items-start gap-4 justify-between">
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="rounded-lg bg-primary/15 p-2.5 shrink-0">
-                <Wallet className="h-5 w-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Outstanding balance
-                </p>
-                <p className="text-3xl md:text-4xl font-bold text-foreground mt-1">
-                  {fmt(outstanding.total, outstanding.currency)}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {outstanding.count === 0
-                    ? "All clear — no invoices to pay."
-                    : `${outstanding.count} ${outstanding.count === 1 ? "invoice" : "invoices"} awaiting payment`}
-                  {outstanding.count > 1 && (
-                    <span className="text-xs"> · paying clears the oldest first</span>
-                  )}
-                </p>
-              </div>
-            </div>
-            {outstanding.count > 0 && (
-              <Button size="lg" onClick={handlePayOutstanding} className="shrink-0">
-                <CreditCard className="h-4 w-4 mr-2" />
-                Pay with card
-              </Button>
-            )}
-          </div>
-        </section>
-      )}
-
 
       {/* Bank transfer — alternative to online card payment */}
       <section className="mb-8 rounded-xl border border-border bg-card p-5 md:p-6">

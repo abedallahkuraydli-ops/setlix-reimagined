@@ -1750,10 +1750,6 @@ export type Database = {
           bank_name: string
         }[]
       }
-      get_or_create_invoice_for_service: {
-        Args: { _client_service_id: string }
-        Returns: string
-      }
       has_admin_permission: {
         Args: {
           _permission: Database["public"]["Enums"]["admin_permission"]

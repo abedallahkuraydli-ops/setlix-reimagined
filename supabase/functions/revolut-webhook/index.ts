@@ -1,8 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const LIVE_KEY = Deno.env.get('REVOLUT_SECRET_KEY')
-const REVOLUT_BASE = LIVE_KEY ? 'https://merchant.revolut.com' : 'https://sandbox-merchant.revolut.com'
+const REVOLUT_BASE = 'https://sandbox-merchant.revolut.com'
 const REVOLUT_API_VERSION = '2024-09-01'
 
 Deno.serve(async (req) => {
@@ -12,7 +11,7 @@ Deno.serve(async (req) => {
   const rawBody = await req.text()
   const signatureHeader = req.headers.get('Revolut-Signature') || ''
   const timestamp = req.headers.get('Revolut-Request-Timestamp') || ''
-  const signingSecret = Deno.env.get('REVOLUT_WEBHOOK_SECRET') || Deno.env.get('REVOLUT_SANDBOX_WEBHOOK_SECRET')
+  const signingSecret = Deno.env.get('REVOLUT_SANDBOX_WEBHOOK_SECRET')
 
   if (!signingSecret) {
     console.error('Webhook secret missing')
@@ -44,7 +43,7 @@ Deno.serve(async (req) => {
   // Fetch authoritative order state from Revolut
   const orderRes = await fetch(`${REVOLUT_BASE}/api/orders/${orderId}`, {
     headers: {
-      Authorization: `Bearer ${LIVE_KEY || Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')}`,
+      Authorization: `Bearer ${Deno.env.get('REVOLUT_SANDBOX_SECRET_KEY')}`,
       'Revolut-Api-Version': REVOLUT_API_VERSION,
     },
   })
