@@ -33,10 +33,3 @@ verify_jwt = false
 [functions.notify-unread-messages]
 verify_jwt = false
 
-[functions.revolut-create-order]
-verify_jwt = true
-
-[functions.revolut-webhook]
-verify_jwt = false
-
-
