@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, Calendar, MessageSquare, Settings, Shield, ShieldCheck, ClipboardList, Lock } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, Calendar, MessageSquare, Settings, Shield, ShieldCheck, ClipboardList, Lock, Library } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -18,6 +18,7 @@ const baseItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Clients", url: "/admin/clients", icon: Users },
   { title: "Services Catalogue", url: "/admin/services", icon: BookOpen, superOnly: true },
+  { title: "Guidebooks", url: "/admin/guidebooks", icon: Library, superOnly: true },
   { title: "Appointments", url: "/admin/appointments", icon: Calendar },
   { title: "Messages", url: "/admin/messages", icon: MessageSquare },
   { title: "Surveys", url: "/admin/surveys", icon: ClipboardList, superOnly: true },
