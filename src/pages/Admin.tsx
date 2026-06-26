@@ -14,6 +14,7 @@ import AdminBreachProcedure from "@/pages/admin/AdminBreachProcedure";
 import AdminManagement from "@/pages/admin/AdminManagement";
 import AdminSurveys from "@/pages/admin/AdminSurveys";
 import AdminLockedAccounts from "@/pages/admin/AdminLockedAccounts";
+import AdminGuidebooks from "@/pages/admin/AdminGuidebooks";
 
 const Admin = () => (
   <SidebarProvider>
@@ -28,6 +29,7 @@ const Admin = () => (
             <Route path="clients/:clientId" element={<AdminClientDetail />} />
             <Route path="appointments" element={<AdminAppointments />} />
             <Route path="services" element={<SuperadminRoute><AdminServicesCatalogue /></SuperadminRoute>} />
+            <Route path="guidebooks" element={<SuperadminRoute><AdminGuidebooks /></SuperadminRoute>} />
             <Route path="messages" element={<AdminMessages />} />
             <Route path="settings" element={<SuperadminRoute><AdminSettings /></SuperadminRoute>} />
             <Route path="breach-procedure" element={<SuperadminRoute><AdminBreachProcedure /></SuperadminRoute>} />

@@ -6,6 +6,7 @@ import Services from "@/components/Services";
 import VisaTypes from "@/components/VisaTypes";
 import Stats from "@/components/Stats";
 import Contact from "@/components/Contact";
+import Guidebooks from "@/components/Guidebooks";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 
@@ -21,6 +22,7 @@ const Index = () => {
       <Services />
       <VisaTypes />
       <Contact />
+      <Guidebooks />
       <Footer />
     </div>
   );
