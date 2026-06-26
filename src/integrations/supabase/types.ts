@@ -935,6 +935,45 @@ export type Database = {
         }
         Relationships: []
       }
+      guidebooks: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          title: string
+          updated_at: string
+          uploaded_by_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by_user_id?: string | null
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount_cents: number
