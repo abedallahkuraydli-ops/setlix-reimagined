@@ -219,15 +219,96 @@ const Settings = () => {
         </div>
 
         {/* Security section */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-card border border-border rounded-xl p-6 space-y-5">
+          <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
             <h2 className="font-semibold text-foreground">Security</h2>
           </div>
-          <p className="text-sm text-muted-foreground">
-            To change your password, use the "Forgot password?" link on the login page. We'll send a secure reset link to your email.
+
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Change your password below. You'll need to enter your current password to confirm the change.
+            </p>
+
+            <div className="space-y-2">
+              <Label className="text-foreground">Current password</Label>
+              <div className="relative">
+                <Input
+                  type={showCurrent ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent((s) => !s)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                  aria-label={showCurrent ? "Hide password" : "Show password"}
+                >
+                  {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-foreground">New password</Label>
+              <div className="relative">
+                <Input
+                  type={showNew ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  onFocus={() => setNewPasswordFocused(true)}
+                  autoComplete="new-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNew((s) => !s)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                  aria-label={showNew ? "Hide password" : "Show password"}
+                >
+                  {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {(newPasswordFocused || newPassword.length > 0) && (
+                <ul className="mt-2 space-y-1">
+                  {passwordChecks.map((c) => (
+                    <li key={c.id} className="flex items-center gap-2 text-xs">
+                      {c.valid ? (
+                        <Check className="h-3.5 w-3.5 text-green-600" />
+                      ) : (
+                        <X className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                      <span className={c.valid ? "text-green-700" : "text-muted-foreground"}>{c.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-foreground">Confirm new password</Label>
+              <Input
+                type={showNew ? "text" : "password"}
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleChangePassword} disabled={changingPassword}>
+                {changingPassword ? "Updating…" : "Update password"}
+              </Button>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground border-t border-border pt-4">
+            Forgot your current password? Sign out and use "Forgot password?" on the login page to receive a secure reset link by email.
           </p>
         </div>
+
 
         {/* Privacy & GDPR section */}
         <div className="bg-card border border-border rounded-xl p-6 space-y-5">
