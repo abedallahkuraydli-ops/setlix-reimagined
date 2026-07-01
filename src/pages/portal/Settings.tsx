@@ -26,6 +26,60 @@ const Settings = () => {
   const [deletionReason, setDeletionReason] = useState("");
   const [submittingDeletion, setSubmittingDeletion] = useState(false);
   const [consents, setConsents] = useState<ConsentRecord[]>([]);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [newPasswordFocused, setNewPasswordFocused] = useState(false);
+
+  const passwordRules = [
+    { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+    { id: "upper", label: "One uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+    { id: "lower", label: "One lowercase letter", test: (p: string) => /[a-z]/.test(p) },
+    { id: "number", label: "One number", test: (p: string) => /[0-9]/.test(p) },
+    { id: "special", label: "One special character", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+  ];
+  const passwordChecks = passwordRules.map((r) => ({ ...r, valid: r.test(newPassword) }));
+  const newPasswordValid = passwordChecks.every((c) => c.valid);
+
+  const handleChangePassword = async () => {
+    if (!user?.email) return;
+    if (!currentPassword) {
+      toast({ title: "Enter your current password", variant: "destructive" });
+      return;
+    }
+    if (!newPasswordValid) {
+      toast({ title: "Choose a stronger password", description: "Password does not meet all requirements.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    setChangingPassword(true);
+    // Re-authenticate to verify current password
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (signInErr) {
+      setChangingPassword(false);
+      toast({ title: "Current password is incorrect", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPassword(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    toast({ title: "Password updated successfully" });
+  };
 
   useEffect(() => {
     if (!user) return;
