@@ -11,7 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { User, Shield, Download, Trash2, FileLock2, FileCheck2 } from "lucide-react";
+import { User, Shield, Download, Trash2, FileLock2, FileCheck2, Eye, EyeOff, Check, X } from "lucide-react";
 import { listConsents, type ConsentRecord } from "@/lib/consent";
 import { buildClientDataExportZip } from "@/lib/dataExport";
 
