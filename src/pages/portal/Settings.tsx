@@ -11,7 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { User, Shield, Download, Trash2, FileLock2, FileCheck2 } from "lucide-react";
+import { User, Shield, Download, Trash2, FileLock2, FileCheck2, Eye, EyeOff, Check, X } from "lucide-react";
 import { listConsents, type ConsentRecord } from "@/lib/consent";
 import { buildClientDataExportZip } from "@/lib/dataExport";
 
@@ -26,6 +26,60 @@ const Settings = () => {
   const [deletionReason, setDeletionReason] = useState("");
   const [submittingDeletion, setSubmittingDeletion] = useState(false);
   const [consents, setConsents] = useState<ConsentRecord[]>([]);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [newPasswordFocused, setNewPasswordFocused] = useState(false);
+
+  const passwordRules = [
+    { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+    { id: "upper", label: "One uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+    { id: "lower", label: "One lowercase letter", test: (p: string) => /[a-z]/.test(p) },
+    { id: "number", label: "One number", test: (p: string) => /[0-9]/.test(p) },
+    { id: "special", label: "One special character", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+  ];
+  const passwordChecks = passwordRules.map((r) => ({ ...r, valid: r.test(newPassword) }));
+  const newPasswordValid = passwordChecks.every((c) => c.valid);
+
+  const handleChangePassword = async () => {
+    if (!user?.email) return;
+    if (!currentPassword) {
+      toast({ title: "Enter your current password", variant: "destructive" });
+      return;
+    }
+    if (!newPasswordValid) {
+      toast({ title: "Choose a stronger password", description: "Password does not meet all requirements.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    setChangingPassword(true);
+    // Re-authenticate to verify current password
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (signInErr) {
+      setChangingPassword(false);
+      toast({ title: "Current password is incorrect", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPassword(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    toast({ title: "Password updated successfully" });
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -165,15 +219,96 @@ const Settings = () => {
         </div>
 
         {/* Security section */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-card border border-border rounded-xl p-6 space-y-5">
+          <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
             <h2 className="font-semibold text-foreground">Security</h2>
           </div>
-          <p className="text-sm text-muted-foreground">
-            To change your password, use the "Forgot password?" link on the login page. We'll send a secure reset link to your email.
+
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Change your password below. You'll need to enter your current password to confirm the change.
+            </p>
+
+            <div className="space-y-2">
+              <Label className="text-foreground">Current password</Label>
+              <div className="relative">
+                <Input
+                  type={showCurrent ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent((s) => !s)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                  aria-label={showCurrent ? "Hide password" : "Show password"}
+                >
+                  {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-foreground">New password</Label>
+              <div className="relative">
+                <Input
+                  type={showNew ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  onFocus={() => setNewPasswordFocused(true)}
+                  autoComplete="new-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNew((s) => !s)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                  aria-label={showNew ? "Hide password" : "Show password"}
+                >
+                  {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {(newPasswordFocused || newPassword.length > 0) && (
+                <ul className="mt-2 space-y-1">
+                  {passwordChecks.map((c) => (
+                    <li key={c.id} className="flex items-center gap-2 text-xs">
+                      {c.valid ? (
+                        <Check className="h-3.5 w-3.5 text-green-600" />
+                      ) : (
+                        <X className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                      <span className={c.valid ? "text-green-700" : "text-muted-foreground"}>{c.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-foreground">Confirm new password</Label>
+              <Input
+                type={showNew ? "text" : "password"}
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleChangePassword} disabled={changingPassword}>
+                {changingPassword ? "Updating…" : "Update password"}
+              </Button>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground border-t border-border pt-4">
+            Forgot your current password? Sign out and use "Forgot password?" on the login page to receive a secure reset link by email.
           </p>
         </div>
+
 
         {/* Privacy & GDPR section */}
         <div className="bg-card border border-border rounded-xl p-6 space-y-5">
