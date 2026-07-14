@@ -88,14 +88,20 @@ const Services = () => {
         .eq("user_id", user.id)
         .single();
       if (!profile) { setLoading(false); return; }
-      profileId = profile.id;
+      pid = profile.id;
+      setProfileId(pid);
       await fetchServices();
 
       channel = supabase
-        .channel(`client-services-${profileId}-${Math.random().toString(36).slice(2)}`)
+        .channel(`client-services-${pid}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${profileId}` },
+          { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${pid}` },
+          () => { fetchServices(); }
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "client_milestones", filter: `client_id=eq.${pid}` },
           () => { fetchServices(); }
         )
         .subscribe();
