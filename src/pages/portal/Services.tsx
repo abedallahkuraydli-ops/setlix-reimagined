@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ContractBanner } from "@/components/portal/ContractBanner";
 import { useContractStatus } from "@/hooks/useContractStatus";
+import { MilestoneTracker } from "@/components/portal/MilestoneTracker";
 
 interface ClientServiceRow {
   id: string;
@@ -19,6 +20,7 @@ interface ClientServiceRow {
   currency: string | null;
   payment_status: "unpaid" | "paid" | "refunded" | "not_required";
   service_catalogue: { name: string; category: string } | null;
+  milestone_id: string | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -52,20 +54,30 @@ const Services = () => {
   const navigate = useNavigate();
   const { isSigned, loading: contractLoading } = useContractStatus();
   const [services, setServices] = useState<ClientServiceRow[]>([]);
+  const [milestones, setMilestones] = useState<{ id: string; title: string; position: number; status: string }[]>([]);
+  const [profileId, setProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
-    let profileId: string | null = null;
+    let pid: string | null = null;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const fetchServices = async () => {
-      const { data } = await supabase
-        .from("client_services")
-        .select("id, status, progress_percentage, price_cents, quantity, vat_rate, currency, payment_status, service_catalogue(name, category)")
-        .eq("client_id", profileId!)
-        .order("created_at", { ascending: false });
-      if (data) setServices(data as any);
+      const [svc, ms] = await Promise.all([
+        supabase
+          .from("client_services")
+          .select("id, status, progress_percentage, price_cents, quantity, vat_rate, currency, payment_status, milestone_id, service_catalogue(name, category)")
+          .eq("client_id", pid!)
+          .order("created_at", { ascending: false }),
+        (supabase as any)
+          .from("client_milestones")
+          .select("id, title, position, status")
+          .eq("client_id", pid!)
+          .order("position"),
+      ]);
+      if (svc.data) setServices(svc.data as any);
+      setMilestones((ms.data ?? []) as any);
       setLoading(false);
     };
 
@@ -76,14 +88,20 @@ const Services = () => {
         .eq("user_id", user.id)
         .single();
       if (!profile) { setLoading(false); return; }
-      profileId = profile.id;
+      pid = profile.id;
+      setProfileId(pid);
       await fetchServices();
 
       channel = supabase
-        .channel(`client-services-${profileId}-${Math.random().toString(36).slice(2)}`)
+        .channel(`client-services-${pid}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${profileId}` },
+          { event: "*", schema: "public", table: "client_services", filter: `client_id=eq.${pid}` },
+          () => { fetchServices(); }
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "client_milestones", filter: `client_id=eq.${pid}` },
           () => { fetchServices(); }
         )
         .subscribe();
@@ -150,58 +168,112 @@ const Services = () => {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {services.map((s) => {
-            const ccy = s.currency || "EUR";
-            const qty = s.quantity || 1;
-            const unit = s.price_cents || 0;
-            const lineTotal = unit * qty;
-            const pay = paymentBadge[s.payment_status] || paymentBadge.unpaid;
-            const canPay = s.payment_status === "unpaid" && unit > 0;
-            return (
-              <div key={s.id} className="bg-card border border-border rounded-xl p-5 space-y-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-foreground">{s.service_catalogue?.name}</p>
-                    <p className="text-xs text-muted-foreground">{s.service_catalogue?.category}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <Badge className={`${statusColors[s.status] || ""} border-0 text-xs`}>
-                        {statusLabels[s.status] || s.status}
-                      </Badge>
-                      <Badge className={`${pay.className} border-0 text-xs`}>{pay.label}</Badge>
+        <div className="space-y-6">
+          {profileId && milestones.length > 0 && (
+            <MilestoneTracker
+              clientId={profileId}
+              services={services.map((s) => ({ milestone_id: s.milestone_id, status: s.status }))}
+            />
+          )}
+
+          {(() => {
+            const renderService = (s: ClientServiceRow) => {
+              const ccy = s.currency || "EUR";
+              const qty = s.quantity || 1;
+              const unit = s.price_cents || 0;
+              const lineTotal = unit * qty;
+              const pay = paymentBadge[s.payment_status] || paymentBadge.unpaid;
+              const canPay = s.payment_status === "unpaid" && unit > 0;
+              return (
+                <div key={s.id} className="bg-card border border-border rounded-xl p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground">{s.service_catalogue?.name}</p>
+                      <p className="text-xs text-muted-foreground">{s.service_catalogue?.category}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <Badge className={`${statusColors[s.status] || ""} border-0 text-xs`}>
+                          {statusLabels[s.status] || s.status}
+                        </Badge>
+                        <Badge className={`${pay.className} border-0 text-xs`}>{pay.label}</Badge>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      {unit > 0 ? (
+                        <>
+                          <p className="text-base font-semibold text-foreground">{fmt(lineTotal, ccy)}</p>
+                          {qty > 1 && (
+                            <p className="text-xs text-muted-foreground">{fmt(unit, ccy)} × {qty}</p>
+                          )}
+                          {s.vat_rate != null && (
+                            <p className="text-[11px] text-muted-foreground">incl. VAT {Number(s.vat_rate)}%</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Price pending</p>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    {unit > 0 ? (
-                      <>
-                        <p className="text-base font-semibold text-foreground">{fmt(lineTotal, ccy)}</p>
-                        {qty > 1 && (
-                          <p className="text-xs text-muted-foreground">{fmt(unit, ccy)} × {qty}</p>
-                        )}
-                        {s.vat_rate != null && (
-                          <p className="text-[11px] text-muted-foreground">incl. VAT {Number(s.vat_rate)}%</p>
-                        )}
-                      </>
+                  <div className="flex items-center gap-3">
+                    <Progress value={s.progress_percentage} className="h-2 flex-1" />
+                    <span className="text-sm font-medium text-muted-foreground">{s.progress_percentage}%</span>
+                  </div>
+                  {canPay && (
+                    <div className="flex justify-end pt-1">
+                      <Button size="sm" variant="outline" onClick={() => navigate("/portal/payments")}>
+                        <Building2 className="h-4 w-4 mr-1" />
+                        Bank transfer details
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            };
+
+            if (milestones.length === 0) {
+              return <div className="space-y-4">{services.map(renderService)}</div>;
+            }
+
+            const groups = milestones.map((m) => ({
+              milestone: m,
+              items: services.filter((s) => s.milestone_id === m.id),
+            }));
+            const unassigned = services.filter((s) => !s.milestone_id);
+
+            return (
+              <div className="space-y-6">
+                {groups.map(({ milestone, items }) => (
+                  <div key={milestone.id}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        {milestone.title}
+                      </h3>
+                      {milestone.status === "active" && (
+                        <span className="text-[10px] uppercase tracking-wide font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                          Current
+                        </span>
+                      )}
+                      {milestone.status === "completed" && (
+                        <span className="text-[10px] uppercase tracking-wide font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          Completed
+                        </span>
+                      )}
+                    </div>
+                    {items.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic px-1">No services in this milestone yet.</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Price pending</p>
+                      <div className="space-y-4">{items.map(renderService)}</div>
                     )}
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Progress value={s.progress_percentage} className="h-2 flex-1" />
-                  <span className="text-sm font-medium text-muted-foreground">{s.progress_percentage}%</span>
-                </div>
-                {canPay && (
-                  <div className="flex justify-end pt-1">
-                    <Button size="sm" variant="outline" onClick={() => navigate("/portal/payments")}>
-                      <Building2 className="h-4 w-4 mr-1" />
-                      Bank transfer details
-                    </Button>
+                ))}
+                {unassigned.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Other services</h3>
+                    <div className="space-y-4">{unassigned.map(renderService)}</div>
                   </div>
                 )}
               </div>
             );
-          })}
+          })()}
         </div>
       )}
       </div>

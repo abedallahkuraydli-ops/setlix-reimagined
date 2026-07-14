@@ -286,6 +286,56 @@ export type Database = {
         }
         Relationships: []
       }
+      client_milestones: {
+        Row: {
+          categories: string[]
+          client_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          description: string | null
+          id: string
+          position: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          categories?: string[]
+          client_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          position?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          categories?: string[]
+          client_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          position?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_milestones_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_payments: {
         Row: {
           amount_cents: number
@@ -326,6 +376,7 @@ export type Database = {
           created_at: string
           currency: string | null
           id: string
+          milestone_id: string | null
           notes: string | null
           payment_status: Database["public"]["Enums"]["client_service_payment_status"]
           price_cents: number | null
@@ -342,6 +393,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           id?: string
+          milestone_id?: string | null
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["client_service_payment_status"]
           price_cents?: number | null
@@ -358,6 +410,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           id?: string
+          milestone_id?: string | null
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["client_service_payment_status"]
           price_cents?: number | null
@@ -381,6 +434,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_services_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "client_milestones"
             referencedColumns: ["id"]
           },
           {
@@ -1768,6 +1828,10 @@ export type Database = {
           is_default: boolean
           meet_link: string
         }[]
+      }
+      complete_client_milestone: {
+        Args: { _milestone_id: string }
+        Returns: string
       }
       count_recent_failed_logins: { Args: { _email: string }; Returns: number }
       current_profile_id: { Args: never; Returns: string }

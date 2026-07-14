@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NotificationsBanner } from "@/components/portal/NotificationsBanner";
+import { MilestoneTracker } from "@/components/portal/MilestoneTracker";
 import {
   applyDueLateFees,
   computeBilling,
@@ -181,6 +182,10 @@ const Dashboard = () => {
 
       {/* Live notifications from admin actions */}
       <NotificationsBanner />
+
+      {profileId && <MilestoneTracker clientId={profileId} compact />}
+
+
 
 
       {pendingRequests.length > 0 && (

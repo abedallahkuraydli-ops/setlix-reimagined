@@ -31,6 +31,7 @@ import { AdminInvoicesSection } from "@/components/admin/AdminInvoicesSection";
 import { AdminBillingSection } from "@/components/admin/AdminBillingSection";
 import { ClientMonthlyTransactions } from "@/components/admin/ClientMonthlyTransactions";
 import { AdminPendingRequestsSection } from "@/components/admin/AdminPendingRequestsSection";
+import { AdminMilestonesSection } from "@/components/admin/AdminMilestonesSection";
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
 import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
 import { fetchAuthorisedDocIds, logUnauthorisedAttempt } from "@/lib/adminDownloads";
@@ -669,6 +670,10 @@ const AdminClientDetail = () => {
       {isSuperadmin && <ClientMonthlyTransactions clientId={profile.id} />}
       {/* Pending Service Requests */}
       <AdminPendingRequestsSection clientId={profile.id} onChanged={fetchAll} />
+
+      {isSuperadmin && <AdminMilestonesSection clientId={profile.id} />}
+
+
 
       <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
