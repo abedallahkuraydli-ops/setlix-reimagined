@@ -99,29 +99,29 @@ export const MilestoneTracker = ({ clientId, compact = false, services }: Props)
         </span>
       </div>
 
-      <div className="overflow-x-auto -mx-2 px-2 pb-2">
+      <div className="overflow-x-auto -mx-2 px-2 pt-2 pb-2">
         <div
           className="relative flex items-start"
-          style={{ minWidth: `${Math.max(total * (compact ? 110 : 140), 320)}px` }}
+          style={{ minWidth: `${total * (compact ? 120 : 160)}px` }}
         >
           {/* Track line (background) */}
           <div
-            className="absolute left-0 right-0 bg-border"
+            className="absolute bg-border"
             style={{
-              top: compact ? "13px" : "17px",
+              top: compact ? "15px" : "19px",
               height: "2px",
-              marginLeft: `${100 / (total * 2)}%`,
-              marginRight: `${100 / (total * 2)}%`,
+              left: `${100 / (total * 2)}%`,
+              right: `${100 / (total * 2)}%`,
             }}
           />
           {/* Track line (progress) */}
           <div
             className="absolute bg-primary transition-all duration-500"
             style={{
-              top: compact ? "13px" : "17px",
+              top: compact ? "15px" : "19px",
               height: "2px",
               left: `${100 / (total * 2)}%`,
-              width: `calc(${((total - 1) / total) * progressPercent}% )`,
+              width: `${((total - 1) / total) * progressPercent}%`,
             }}
           />
 
@@ -132,8 +132,9 @@ export const MilestoneTracker = ({ clientId, compact = false, services }: Props)
             return (
               <div
                 key={m.id}
-                className="relative flex flex-col items-center text-center flex-1 min-w-0 px-1"
+                className="relative flex flex-col items-center text-center flex-1 min-w-0 px-2"
               >
+
                 <div
                   className={`${dotSize} rounded-full flex items-center justify-center border-2 z-10 shrink-0 transition-colors ${
                     isDone
