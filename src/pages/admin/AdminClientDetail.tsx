@@ -670,6 +670,10 @@ const AdminClientDetail = () => {
       {/* Pending Service Requests */}
       <AdminPendingRequestsSection clientId={profile.id} onChanged={fetchAll} />
 
+      {isSuperadmin && <AdminMilestonesSection clientId={profile.id} />}
+
+
+
       <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">Services</h2>
