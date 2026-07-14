@@ -671,7 +671,10 @@ const AdminClientDetail = () => {
       {/* Pending Service Requests */}
       <AdminPendingRequestsSection clientId={profile.id} onChanged={fetchAll} />
 
+      <MilestoneTracker clientId={profile.id} />
+
       {isSuperadmin && <AdminMilestonesSection clientId={profile.id} />}
+
 
 
 
