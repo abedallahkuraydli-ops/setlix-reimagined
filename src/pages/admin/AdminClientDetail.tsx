@@ -32,6 +32,8 @@ import { AdminBillingSection } from "@/components/admin/AdminBillingSection";
 import { ClientMonthlyTransactions } from "@/components/admin/ClientMonthlyTransactions";
 import { AdminPendingRequestsSection } from "@/components/admin/AdminPendingRequestsSection";
 import { AdminMilestonesSection } from "@/components/admin/AdminMilestonesSection";
+import { MilestoneTracker } from "@/components/portal/MilestoneTracker";
+
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
 import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
 import { fetchAuthorisedDocIds, logUnauthorisedAttempt } from "@/lib/adminDownloads";
