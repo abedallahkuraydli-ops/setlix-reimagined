@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ContractBanner } from "@/components/portal/ContractBanner";
 import { useContractStatus } from "@/hooks/useContractStatus";
+import { MilestoneTracker } from "@/components/portal/MilestoneTracker";
+import { supabase as sb } from "@/integrations/supabase/client";
 
 interface ClientServiceRow {
   id: string;
