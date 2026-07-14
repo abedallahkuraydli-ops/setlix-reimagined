@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Circle, Loader2, Flag } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Check, Loader2, Flag } from "lucide-react";
 
 export interface Milestone {
   id: string;
@@ -60,34 +59,22 @@ export const MilestoneTracker = ({ clientId, compact = false, services }: Props)
 
   const completed = milestones.filter((m) => m.status === "completed").length;
   const total = milestones.length;
-  const percent = Math.round((completed / total) * 100);
-  const active = milestones.find((m) => m.status === "active") ?? milestones.find((m) => m.status !== "completed");
+  const activeIdx = milestones.findIndex((m) => m.status === "active");
 
-  if (compact) {
-    return (
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Flag className="h-5 w-5 text-primary" />
-          <h2 className="text-base font-semibold text-foreground">Your progress</h2>
-          <span className="ml-auto text-xs text-muted-foreground font-medium">
-            {completed} of {total} milestones
-          </span>
-        </div>
-        <Progress value={percent} className="h-2 mb-3" />
-        {active && (
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-1">
-              Current milestone
-            </p>
-            <p className="text-sm font-semibold text-foreground">{active.title}</p>
-            {active.description && (
-              <p className="text-xs text-muted-foreground mt-0.5">{active.description}</p>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
+  // Progress: full for completed segments, half for the segment leading into the active milestone
+  const progressPercent = (() => {
+    if (total <= 1) return completed === total ? 100 : 0;
+    const segments = total - 1;
+    let filled = 0;
+    for (let i = 0; i < segments; i++) {
+      const left = milestones[i];
+      const right = milestones[i + 1];
+      if (left.status === "completed" && right.status === "completed") filled += 1;
+      else if (left.status === "completed" && right.status === "active") filled += 0.5;
+      else if (left.status === "completed") filled += 0.5;
+    }
+    return Math.round((filled / segments) * 100);
+  })();
 
   const countFor = (mid: string) => {
     if (!services) return null;
@@ -97,70 +84,99 @@ export const MilestoneTracker = ({ clientId, compact = false, services }: Props)
     return { done, total: rel.length };
   };
 
+  const dotSize = compact ? "h-7 w-7" : "h-9 w-9";
+  const iconSize = compact ? "h-3.5 w-3.5" : "h-4 w-4";
+
   return (
     <div className="rounded-xl border border-border bg-card p-5 md:p-6">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-5">
         <Flag className="h-5 w-5 text-primary" />
-        <h2 className="text-base font-semibold text-foreground">Milestone tracker</h2>
+        <h2 className="text-base font-semibold text-foreground">
+          {compact ? "Your progress" : "Milestone tracker"}
+        </h2>
         <span className="ml-auto text-xs text-muted-foreground font-medium">
           {completed} of {total} complete
         </span>
       </div>
-      <Progress value={percent} className="h-2 mb-6" />
 
-      <ol className="relative border-l border-border ml-3 space-y-6">
-        {milestones.map((m) => {
-          const isDone = m.status === "completed";
-          const isActive = m.status === "active";
-          const c = countFor(m.id);
-          return (
-            <li key={m.id} className="pl-6 relative">
-              <span
-                className={`absolute -left-[13px] top-0 flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-                  isDone
-                    ? "bg-emerald-500 border-emerald-500 text-white"
-                    : isActive
-                      ? "bg-primary border-primary text-primary-foreground"
-                      : "bg-card border-border text-muted-foreground"
-                }`}
+      <div className="overflow-x-auto -mx-2 px-2 pb-2">
+        <div
+          className="relative flex items-start"
+          style={{ minWidth: `${Math.max(total * (compact ? 110 : 140), 320)}px` }}
+        >
+          {/* Track line (background) */}
+          <div
+            className="absolute left-0 right-0 bg-border"
+            style={{
+              top: compact ? "13px" : "17px",
+              height: "2px",
+              marginLeft: `${100 / (total * 2)}%`,
+              marginRight: `${100 / (total * 2)}%`,
+            }}
+          />
+          {/* Track line (progress) */}
+          <div
+            className="absolute bg-primary transition-all duration-500"
+            style={{
+              top: compact ? "13px" : "17px",
+              height: "2px",
+              left: `${100 / (total * 2)}%`,
+              width: `calc(${((total - 1) / total) * progressPercent}% )`,
+            }}
+          />
+
+          {milestones.map((m, idx) => {
+            const isDone = m.status === "completed";
+            const isActive = m.status === "active" || (activeIdx === -1 && idx === completed);
+            const c = countFor(m.id);
+            return (
+              <div
+                key={m.id}
+                className="relative flex flex-col items-center text-center flex-1 min-w-0 px-1"
               >
-                {isDone ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-3 w-3" />}
-              </span>
-              <div className="flex flex-wrap items-baseline gap-2">
-                <p
-                  className={`text-sm font-semibold ${
+                <div
+                  className={`${dotSize} rounded-full flex items-center justify-center border-2 z-10 shrink-0 transition-colors ${
                     isDone
-                      ? "text-muted-foreground line-through"
+                      ? "bg-primary border-primary text-primary-foreground"
                       : isActive
-                        ? "text-foreground"
-                        : "text-foreground/70"
+                        ? "bg-card border-primary text-primary ring-4 ring-primary/15"
+                        : "bg-card border-border text-muted-foreground"
+                  }`}
+                >
+                  {isDone ? (
+                    <Check className={iconSize} />
+                  ) : (
+                    <span className={`text-xs font-semibold ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                      {idx + 1}
+                    </span>
+                  )}
+                </div>
+                <p
+                  className={`mt-2 text-xs font-semibold leading-tight line-clamp-2 ${
+                    isDone
+                      ? "text-foreground"
+                      : isActive
+                        ? "text-primary"
+                        : "text-muted-foreground"
                   }`}
                 >
                   {m.title}
                 </p>
-                {isActive && (
-                  <span className="text-[10px] uppercase tracking-wide font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                {!compact && isActive && (
+                  <span className="mt-1 text-[10px] uppercase tracking-wide font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                     In progress
                   </span>
                 )}
-                {isDone && m.completed_at && (
-                  <span className="text-[11px] text-muted-foreground">
-                    {new Date(m.completed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                  </span>
+                {!compact && c && (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {c.done}/{c.total} services
+                  </p>
                 )}
               </div>
-              {m.description && (
-                <p className="text-xs text-muted-foreground mt-0.5">{m.description}</p>
-              )}
-              {c && (
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  {c.done}/{c.total} services completed
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ol>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
