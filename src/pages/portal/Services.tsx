@@ -20,6 +20,7 @@ interface ClientServiceRow {
   currency: string | null;
   payment_status: "unpaid" | "paid" | "refunded" | "not_required";
   service_catalogue: { name: string; category: string } | null;
+  milestone_id: string | null;
 }
 
 const statusColors: Record<string, string> = {
