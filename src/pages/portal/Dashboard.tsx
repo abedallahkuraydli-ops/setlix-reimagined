@@ -161,8 +161,6 @@ const Dashboard = () => {
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in duration-500">
-      {profileId && <MilestoneTracker clientId={profileId} />}
-
       {/* Welcome banner */}
       <div className="rounded-xl bg-primary p-6 md:p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 opacity-10">
@@ -182,8 +180,11 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {profileId && <MilestoneTracker clientId={profileId} />}
+
       {/* Live notifications from admin actions */}
       <NotificationsBanner />
+
 
 
 
