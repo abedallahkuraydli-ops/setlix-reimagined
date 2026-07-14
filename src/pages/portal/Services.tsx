@@ -54,20 +54,30 @@ const Services = () => {
   const navigate = useNavigate();
   const { isSigned, loading: contractLoading } = useContractStatus();
   const [services, setServices] = useState<ClientServiceRow[]>([]);
+  const [milestones, setMilestones] = useState<{ id: string; title: string; position: number; status: string }[]>([]);
+  const [profileId, setProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
-    let profileId: string | null = null;
+    let pid: string | null = null;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const fetchServices = async () => {
-      const { data } = await supabase
-        .from("client_services")
-        .select("id, status, progress_percentage, price_cents, quantity, vat_rate, currency, payment_status, service_catalogue(name, category)")
-        .eq("client_id", profileId!)
-        .order("created_at", { ascending: false });
-      if (data) setServices(data as any);
+      const [svc, ms] = await Promise.all([
+        supabase
+          .from("client_services")
+          .select("id, status, progress_percentage, price_cents, quantity, vat_rate, currency, payment_status, milestone_id, service_catalogue(name, category)")
+          .eq("client_id", pid!)
+          .order("created_at", { ascending: false }),
+        (supabase as any)
+          .from("client_milestones")
+          .select("id, title, position, status")
+          .eq("client_id", pid!)
+          .order("position"),
+      ]);
+      if (svc.data) setServices(svc.data as any);
+      setMilestones((ms.data ?? []) as any);
       setLoading(false);
     };
 
