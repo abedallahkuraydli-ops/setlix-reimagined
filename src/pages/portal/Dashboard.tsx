@@ -183,6 +183,10 @@ const Dashboard = () => {
       {/* Live notifications from admin actions */}
       <NotificationsBanner />
 
+      {profileId && <MilestoneTracker clientId={profileId} compact />}
+
+
+
 
       {pendingRequests.length > 0 && (
         <div className="rounded-xl border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 p-5">
