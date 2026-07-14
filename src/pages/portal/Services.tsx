@@ -168,58 +168,112 @@ const Services = () => {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {services.map((s) => {
-            const ccy = s.currency || "EUR";
-            const qty = s.quantity || 1;
-            const unit = s.price_cents || 0;
-            const lineTotal = unit * qty;
-            const pay = paymentBadge[s.payment_status] || paymentBadge.unpaid;
-            const canPay = s.payment_status === "unpaid" && unit > 0;
-            return (
-              <div key={s.id} className="bg-card border border-border rounded-xl p-5 space-y-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-foreground">{s.service_catalogue?.name}</p>
-                    <p className="text-xs text-muted-foreground">{s.service_catalogue?.category}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <Badge className={`${statusColors[s.status] || ""} border-0 text-xs`}>
-                        {statusLabels[s.status] || s.status}
-                      </Badge>
-                      <Badge className={`${pay.className} border-0 text-xs`}>{pay.label}</Badge>
+        <div className="space-y-6">
+          {profileId && milestones.length > 0 && (
+            <MilestoneTracker
+              clientId={profileId}
+              services={services.map((s) => ({ milestone_id: s.milestone_id, status: s.status }))}
+            />
+          )}
+
+          {(() => {
+            const renderService = (s: ClientServiceRow) => {
+              const ccy = s.currency || "EUR";
+              const qty = s.quantity || 1;
+              const unit = s.price_cents || 0;
+              const lineTotal = unit * qty;
+              const pay = paymentBadge[s.payment_status] || paymentBadge.unpaid;
+              const canPay = s.payment_status === "unpaid" && unit > 0;
+              return (
+                <div key={s.id} className="bg-card border border-border rounded-xl p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground">{s.service_catalogue?.name}</p>
+                      <p className="text-xs text-muted-foreground">{s.service_catalogue?.category}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <Badge className={`${statusColors[s.status] || ""} border-0 text-xs`}>
+                          {statusLabels[s.status] || s.status}
+                        </Badge>
+                        <Badge className={`${pay.className} border-0 text-xs`}>{pay.label}</Badge>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      {unit > 0 ? (
+                        <>
+                          <p className="text-base font-semibold text-foreground">{fmt(lineTotal, ccy)}</p>
+                          {qty > 1 && (
+                            <p className="text-xs text-muted-foreground">{fmt(unit, ccy)} × {qty}</p>
+                          )}
+                          {s.vat_rate != null && (
+                            <p className="text-[11px] text-muted-foreground">incl. VAT {Number(s.vat_rate)}%</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Price pending</p>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    {unit > 0 ? (
-                      <>
-                        <p className="text-base font-semibold text-foreground">{fmt(lineTotal, ccy)}</p>
-                        {qty > 1 && (
-                          <p className="text-xs text-muted-foreground">{fmt(unit, ccy)} × {qty}</p>
-                        )}
-                        {s.vat_rate != null && (
-                          <p className="text-[11px] text-muted-foreground">incl. VAT {Number(s.vat_rate)}%</p>
-                        )}
-                      </>
+                  <div className="flex items-center gap-3">
+                    <Progress value={s.progress_percentage} className="h-2 flex-1" />
+                    <span className="text-sm font-medium text-muted-foreground">{s.progress_percentage}%</span>
+                  </div>
+                  {canPay && (
+                    <div className="flex justify-end pt-1">
+                      <Button size="sm" variant="outline" onClick={() => navigate("/portal/payments")}>
+                        <Building2 className="h-4 w-4 mr-1" />
+                        Bank transfer details
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            };
+
+            if (milestones.length === 0) {
+              return <div className="space-y-4">{services.map(renderService)}</div>;
+            }
+
+            const groups = milestones.map((m) => ({
+              milestone: m,
+              items: services.filter((s) => s.milestone_id === m.id),
+            }));
+            const unassigned = services.filter((s) => !s.milestone_id);
+
+            return (
+              <div className="space-y-6">
+                {groups.map(({ milestone, items }) => (
+                  <div key={milestone.id}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        {milestone.title}
+                      </h3>
+                      {milestone.status === "active" && (
+                        <span className="text-[10px] uppercase tracking-wide font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                          Current
+                        </span>
+                      )}
+                      {milestone.status === "completed" && (
+                        <span className="text-[10px] uppercase tracking-wide font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          Completed
+                        </span>
+                      )}
+                    </div>
+                    {items.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic px-1">No services in this milestone yet.</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Price pending</p>
+                      <div className="space-y-4">{items.map(renderService)}</div>
                     )}
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Progress value={s.progress_percentage} className="h-2 flex-1" />
-                  <span className="text-sm font-medium text-muted-foreground">{s.progress_percentage}%</span>
-                </div>
-                {canPay && (
-                  <div className="flex justify-end pt-1">
-                    <Button size="sm" variant="outline" onClick={() => navigate("/portal/payments")}>
-                      <Building2 className="h-4 w-4 mr-1" />
-                      Bank transfer details
-                    </Button>
+                ))}
+                {unassigned.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Other services</h3>
+                    <div className="space-y-4">{unassigned.map(renderService)}</div>
                   </div>
                 )}
               </div>
             );
-          })}
+          })()}
         </div>
       )}
       </div>
