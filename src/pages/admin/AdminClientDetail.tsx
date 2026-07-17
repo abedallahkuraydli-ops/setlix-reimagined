@@ -967,6 +967,10 @@ const AdminClientDetail = () => {
         )}
       </section>
 
+      {isSuperadmin && profile && (
+        <AdminDocumentCategoriesSection clientId={profile.id} onChanged={fetchAll} />
+      )}
+
       {/* Client Uploads */}
       <section className="bg-card border border-border rounded-xl p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">Client Uploads</h2>
