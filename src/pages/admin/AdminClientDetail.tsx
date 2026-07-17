@@ -33,6 +33,7 @@ import { ClientMonthlyTransactions } from "@/components/admin/ClientMonthlyTrans
 import { AdminPendingRequestsSection } from "@/components/admin/AdminPendingRequestsSection";
 import { AdminMilestonesSection } from "@/components/admin/AdminMilestonesSection";
 import { MilestoneTracker } from "@/components/portal/MilestoneTracker";
+import { AdminDocumentCategoriesSection } from "@/components/admin/AdminDocumentCategoriesSection";
 
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
 import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
@@ -111,6 +112,12 @@ interface ClientDoc {
   category: string;
   created_at: string;
   user_id: string;
+  category_id: string | null;
+}
+
+interface DocCategory {
+  id: string;
+  name: string;
 }
 
 const AdminClientDetail = () => {
@@ -125,6 +132,7 @@ const AdminClientDetail = () => {
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([]);
   const [clientUploads, setClientUploads] = useState<ClientDoc[]>([]);
   const [issuedDocs, setIssuedDocs] = useState<ClientDoc[]>([]);
+  const [docCategories, setDocCategories] = useState<DocCategory[]>([]);
   const [uploadingIssued, setUploadingIssued] = useState(false);
   const [loading, setLoading] = useState(true);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
@@ -203,13 +211,19 @@ const AdminClientDetail = () => {
       // Fetch documents stored under that user_id
       const { data: clientDocs } = await supabase
         .from("documents")
-        .select("id, file_name, file_path, file_size, category, created_at, user_id")
+        .select("id, file_name, file_path, file_size, category, created_at, user_id, category_id")
         .eq("user_id", profileRes.data.user_id)
         .order("created_at", { ascending: false });
       if (clientDocs) {
         setClientUploads(clientDocs.filter((d) => d.category === "client_upload"));
         setIssuedDocs(clientDocs.filter((d) => d.category === "setlix_issued"));
       }
+      const { data: catsData } = await supabase
+        .from("document_categories")
+        .select("id, name")
+        .eq("client_id", clientId)
+        .order("position", { ascending: true });
+      if (catsData) setDocCategories(catsData as DocCategory[]);
       // Fetch client email via edge function
       try {
         const { data: emailLookup } = await supabase.functions.invoke<{ email: string | null }>("get-user-email", {
@@ -504,6 +518,21 @@ const AdminClientDetail = () => {
       });
     }
     fetchAll();
+  };
+
+  const updateDocCategory = async (docId: string, categoryId: string | null) => {
+    const { error } = await supabase
+      .from("documents")
+      .update({ category_id: categoryId })
+      .eq("id", docId);
+    if (error) {
+      toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const patch = (list: ClientDoc[]) =>
+      list.map((d) => (d.id === docId ? { ...d, category_id: categoryId } : d));
+    setClientUploads(patch);
+    setIssuedDocs(patch);
   };
 
   if (loading) {
@@ -938,6 +967,10 @@ const AdminClientDetail = () => {
         )}
       </section>
 
+      {isSuperadmin && profile && (
+        <AdminDocumentCategoriesSection clientId={profile.id} onChanged={fetchAll} />
+      )}
+
       {/* Client Uploads */}
       <section className="bg-card border border-border rounded-xl p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">Client Uploads</h2>
@@ -961,6 +994,22 @@ const AdminClientDetail = () => {
                     {formatBytes(doc.file_size)} · {new Date(doc.created_at).toLocaleDateString("en-GB")}
                   </p>
                 </div>
+                {isSuperadmin && (
+                  <Select
+                    value={doc.category_id ?? "none"}
+                    onValueChange={(v) => updateDocCategory(doc.id, v === "none" ? null : v)}
+                  >
+                    <SelectTrigger className="h-8 w-40 text-xs">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Uncategorised</SelectItem>
+                      {docCategories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1016,6 +1065,22 @@ const AdminClientDetail = () => {
                     {formatBytes(doc.file_size)} · {new Date(doc.created_at).toLocaleDateString("en-GB")}
                   </p>
                 </div>
+                {isSuperadmin && (
+                  <Select
+                    value={doc.category_id ?? "none"}
+                    onValueChange={(v) => updateDocCategory(doc.id, v === "none" ? null : v)}
+                  >
+                    <SelectTrigger className="h-8 w-40 text-xs">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Uncategorised</SelectItem>
+                      {docCategories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"

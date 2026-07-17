@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { FileText, Upload, Building2, Trash2, Download, Loader2, AlertCircle, ShieldCheck, MapPin, Clock } from "lucide-react";
+import { FileText, Upload, Building2, Trash2, Download, Loader2, AlertCircle, ShieldCheck, MapPin, Clock, FolderOpen, ChevronDown, ChevronRight, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, computeSha256, formatBytes, logAudit, retentionLabel, validateFile } from "@/lib/documents";
 
@@ -15,6 +16,13 @@ interface DocRecord {
   file_size: number | null;
   category: string;
   created_at: string;
+  category_id: string | null;
+}
+
+interface DocCategory {
+  id: string;
+  name: string;
+  description: string | null;
 }
 
 interface DocRequest {
@@ -38,6 +46,11 @@ const Documents = () => {
   const { toast } = useToast();
   const [uploads, setUploads] = useState<DocRecord[]>([]);
   const [issued, setIssued] = useState<DocRecord[]>([]);
+  const [allDocs, setAllDocs] = useState<DocRecord[]>([]);
+  const [categories, setCategories] = useState<DocCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("none");
+  const [expandedCat, setExpandedCat] = useState<string | null>(null);
+  const [zippingCatId, setZippingCatId] = useState<string | null>(null);
   const [docRequests, setDocRequests] = useState<DocRequest[]>([]);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +60,6 @@ const Documents = () => {
   const fetchDocs = useCallback(async () => {
     if (!user) return;
 
-    // Get profile id
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -56,10 +68,10 @@ const Documents = () => {
 
     if (profile) setProfileId(profile.id);
 
-    const [docsRes, reqRes] = await Promise.all([
+    const [docsRes, reqRes, catRes] = await Promise.all([
       supabase
         .from("documents")
-        .select("*")
+        .select("id, file_name, file_path, file_size, category, created_at, category_id")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
       profile
@@ -69,13 +81,23 @@ const Documents = () => {
             .eq("client_id", profile.id)
             .order("created_at", { ascending: false })
         : Promise.resolve({ data: [] }),
+      profile
+        ? supabase
+            .from("document_categories")
+            .select("id, name, description")
+            .eq("client_id", profile.id)
+            .order("position", { ascending: true })
+        : Promise.resolve({ data: [] as DocCategory[] }),
     ]);
 
     if (docsRes.data) {
-      setUploads(docsRes.data.filter((d: DocRecord) => d.category === "client_upload"));
-      setIssued(docsRes.data.filter((d: DocRecord) => d.category === "setlix_issued"));
+      const docs = docsRes.data as DocRecord[];
+      setAllDocs(docs);
+      setUploads(docs.filter((d) => d.category === "client_upload"));
+      setIssued(docs.filter((d) => d.category === "setlix_issued"));
     }
     if (reqRes.data) setDocRequests(reqRes.data as any);
+    if (catRes.data) setCategories(catRes.data as DocCategory[]);
     setLoading(false);
   }, [user]);
 
@@ -110,6 +132,7 @@ const Documents = () => {
       category: "client_upload",
       mime_type: file.type,
       sha256_hash: sha256,
+      category_id: selectedCategoryId && selectedCategoryId !== "none" ? selectedCategoryId : null,
     }).select("id").single();
     if (dbError) toast({ title: "Error saving record", description: dbError.message, variant: "destructive" });
     else {
@@ -227,6 +250,45 @@ const Documents = () => {
     e.target.value = "";
   };
 
+  const downloadCategoryZip = async (cat: DocCategory) => {
+    setZippingCatId(cat.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-category-zip`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token ?? ""}`,
+          },
+          body: JSON.stringify({ category_id: cat.id }),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${cat.name.replace(/[^\w.-]+/g, "_")}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      toast({
+        title: "Download failed",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setZippingCatId(null);
+    }
+  };
+
   // Group doc requests by service
   const grouped = docRequests.reduce<Record<string, DocRequest[]>>((acc, dr) => {
     const key = (dr as any).client_services?.service_catalogue?.name || "General Documents";
@@ -303,6 +365,84 @@ const Documents = () => {
       </div>
 
       <div className="space-y-6">
+        {/* Categories */}
+        {categories.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <FolderOpen className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Categories</h2>
+            </div>
+            <div className="bg-card border border-border rounded-xl divide-y divide-border overflow-hidden">
+              {categories.map((cat) => {
+                const catDocs = allDocs.filter((d) => d.category_id === cat.id);
+                const isOpen = expandedCat === cat.id;
+                return (
+                  <div key={cat.id}>
+                    <div className="flex items-center gap-3 p-4 hover:bg-muted/40">
+                      <button
+                        onClick={() => setExpandedCat(isOpen ? null : cat.id)}
+                        className="rounded-lg bg-muted p-2 shrink-0"
+                        aria-label={isOpen ? "Collapse" : "Expand"}
+                      >
+                        {isOpen ? (
+                          <ChevronDown className="h-4 w-4 text-primary" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-primary" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setExpandedCat(isOpen ? null : cat.id)}
+                        className="flex-1 min-w-0 text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{cat.name}</p>
+                          <Badge variant="secondary" className="text-[10px]">
+                            {catDocs.length} {catDocs.length === 1 ? "doc" : "docs"}
+                          </Badge>
+                        </div>
+                        {cat.description && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">{cat.description}</p>
+                        )}
+                      </button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={catDocs.length === 0 || zippingCatId === cat.id}
+                        onClick={() => downloadCategoryZip(cat)}
+                      >
+                        {zippingCatId === cat.id ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Package className="h-4 w-4 mr-1" />
+                        )}
+                        Download all
+                      </Button>
+                    </div>
+                    {isOpen && (
+                      <div className="bg-muted/20 border-t border-border">
+                        {catDocs.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-4">
+                            No documents in this category yet.
+                          </p>
+                        ) : (
+                          <div className="divide-y divide-border">
+                            {catDocs.map((d) => (
+                              <DocRow key={d.id} doc={d} showDelete={d.category === "client_upload"} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Categories are managed by Setlix. Download an entire category as a ZIP, or expand it to pick individual files.
+            </p>
+          </div>
+        )}
+
         {/* Requested Documents */}
         {docRequests.length > 0 && (
           <div>
@@ -393,15 +533,30 @@ const Documents = () => {
               <Upload className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold text-foreground">Your Uploads</h2>
             </div>
-            <label>
-              <input type="file" accept={ALLOWED_EXTENSIONS} className="hidden" onChange={handleUpload} disabled={uploading} />
-              <Button asChild size="sm" disabled={uploading}>
-                <span className="cursor-pointer">
-                  {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
-                  Upload
-                </span>
-              </Button>
-            </label>
+            <div className="flex items-center gap-2">
+              {categories.length > 0 && (
+                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                  <SelectTrigger className="h-9 w-40 text-xs">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Uncategorised</SelectItem>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <label>
+                <input type="file" accept={ALLOWED_EXTENSIONS} className="hidden" onChange={handleUpload} disabled={uploading} />
+                <Button asChild size="sm" disabled={uploading}>
+                  <span className="cursor-pointer">
+                    {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+                    Upload
+                  </span>
+                </Button>
+              </label>
+            </div>
           </div>
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             {loading ? (

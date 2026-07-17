@@ -767,6 +767,44 @@ export type Database = {
         }
         Relationships: []
       }
+      document_categories: {
+        Row: {
+          client_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_categories_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_download_permissions: {
         Row: {
           admin_user_id: string
@@ -866,6 +904,7 @@ export type Database = {
       documents: {
         Row: {
           category: string
+          category_id: string | null
           created_at: string
           file_name: string
           file_path: string
@@ -880,6 +919,7 @@ export type Database = {
         }
         Insert: {
           category?: string
+          category_id?: string | null
           created_at?: string
           file_name: string
           file_path: string
@@ -894,6 +934,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          category_id?: string | null
           created_at?: string
           file_name?: string
           file_path?: string
@@ -906,7 +947,15 @@ export type Database = {
           uploaded_by_admin_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "document_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_send_log: {
         Row: {
