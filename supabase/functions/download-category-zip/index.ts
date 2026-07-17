@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import JSZip from "npm:jszip@3.10.1";
+import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,7 +49,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Load category + authorize caller
     const { data: cat } = await admin
       .from("document_categories")
       .select("id, name, client_id")
@@ -81,7 +80,7 @@ Deno.serve(async (req) => {
 
     const { data: docs, error: docsErr } = await admin
       .from("documents")
-      .select("id, file_name, file_path")
+      .select("id, file_name, file_path, mime_type")
       .eq("category_id", categoryId);
     if (docsErr) throw docsErr;
     if (!docs || docs.length === 0) {
@@ -91,33 +90,95 @@ Deno.serve(async (req) => {
       });
     }
 
-    const zip = new JSZip();
-    const seen = new Map<string, number>();
+    const merged = await PDFDocument.create();
+    const font = await merged.embedFont(StandardFonts.Helvetica);
+    const fontBold = await merged.embedFont(StandardFonts.HelveticaBold);
+
+    // Cover page
+    {
+      const page = merged.addPage([595, 842]);
+      page.drawText(cat.name || "Documents", {
+        x: 50, y: 780, size: 22, font: fontBold, color: rgb(0, 0, 0),
+      });
+      page.drawText(`${docs.length} document${docs.length === 1 ? "" : "s"}`, {
+        x: 50, y: 755, size: 12, font, color: rgb(0.3, 0.3, 0.3),
+      });
+      let y = 720;
+      docs.forEach((d, i) => {
+        if (y < 60) return;
+        const name = (d.file_name || d.file_path.split("/").pop() || "file").slice(0, 80);
+        page.drawText(`${i + 1}. ${name}`, { x: 50, y, size: 11, font, color: rgb(0, 0, 0) });
+        y -= 18;
+      });
+    }
+
+    const unsupported: string[] = [];
+
     for (const d of docs) {
       const { data: fileBlob, error: dlErr } = await admin.storage
         .from("documents")
         .download(d.file_path);
       if (dlErr || !fileBlob) continue;
-      let name = d.file_name || d.file_path.split("/").pop() || "file";
-      const count = seen.get(name) ?? 0;
-      seen.set(name, count + 1);
-      if (count > 0) {
-        const dot = name.lastIndexOf(".");
-        name =
-          dot > 0
-            ? `${name.slice(0, dot)} (${count})${name.slice(dot)}`
-            : `${name} (${count})`;
+      const bytes = new Uint8Array(await fileBlob.arrayBuffer());
+      const mime = (d.mime_type || "").toLowerCase();
+      const name = d.file_name || d.file_path.split("/").pop() || "file";
+
+      try {
+        if (mime === "application/pdf" || name.toLowerCase().endsWith(".pdf")) {
+          const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+          const pages = await merged.copyPages(src, src.getPageIndices());
+          pages.forEach((p) => merged.addPage(p));
+        } else if (mime.startsWith("image/jpeg") || /\.(jpe?g)$/i.test(name)) {
+          const img = await merged.embedJpg(bytes);
+          const page = merged.addPage([595, 842]);
+          const s = Math.min(495 / img.width, 742 / img.height, 1);
+          page.drawImage(img, {
+            x: (595 - img.width * s) / 2,
+            y: (842 - img.height * s) / 2,
+            width: img.width * s,
+            height: img.height * s,
+          });
+        } else if (mime.startsWith("image/png") || /\.png$/i.test(name)) {
+          const img = await merged.embedPng(bytes);
+          const page = merged.addPage([595, 842]);
+          const s = Math.min(495 / img.width, 742 / img.height, 1);
+          page.drawImage(img, {
+            x: (595 - img.width * s) / 2,
+            y: (842 - img.height * s) / 2,
+            width: img.width * s,
+            height: img.height * s,
+          });
+        } else {
+          unsupported.push(name);
+        }
+      } catch (_e) {
+        unsupported.push(name);
       }
-      zip.file(name, await fileBlob.arrayBuffer());
     }
 
-    const zipBuf = await zip.generateAsync({ type: "uint8array" });
+    if (unsupported.length > 0) {
+      const page = merged.addPage([595, 842]);
+      page.drawText("Files not embedded", {
+        x: 50, y: 780, size: 18, font: fontBold, color: rgb(0, 0, 0),
+      });
+      page.drawText("These files could not be included in the PDF (unsupported format):", {
+        x: 50, y: 755, size: 11, font, color: rgb(0.3, 0.3, 0.3),
+      });
+      let y = 725;
+      unsupported.forEach((n, i) => {
+        if (y < 60) return;
+        page.drawText(`${i + 1}. ${n.slice(0, 80)}`, { x: 50, y, size: 11, font, color: rgb(0, 0, 0) });
+        y -= 18;
+      });
+    }
+
+    const pdfBytes = await merged.save();
     const safeName = (cat.name || "documents").replace(/[^\w.-]+/g, "_");
-    return new Response(zipBuf, {
+    return new Response(pdfBytes, {
       headers: {
         ...corsHeaders,
-        "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${safeName}.zip"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
       },
     });
   } catch (err) {
