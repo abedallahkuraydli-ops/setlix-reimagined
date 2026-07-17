@@ -438,7 +438,7 @@ const Documents = () => {
               })}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Categories are managed by Setlix. Download an entire category as a ZIP, or expand it to pick individual files.
+              Categories are managed by Setlix. Download an entire category as a single PDF, or expand it to pick individual files.
             </p>
           </div>
         )}
