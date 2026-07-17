@@ -989,6 +989,22 @@ const AdminClientDetail = () => {
                     {formatBytes(doc.file_size)} · {new Date(doc.created_at).toLocaleDateString("en-GB")}
                   </p>
                 </div>
+                {isSuperadmin && (
+                  <Select
+                    value={doc.category_id ?? "none"}
+                    onValueChange={(v) => updateDocCategory(doc.id, v === "none" ? null : v)}
+                  >
+                    <SelectTrigger className="h-8 w-40 text-xs">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Uncategorised</SelectItem>
+                      {docCategories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
