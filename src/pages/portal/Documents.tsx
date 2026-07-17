@@ -533,15 +533,30 @@ const Documents = () => {
               <Upload className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold text-foreground">Your Uploads</h2>
             </div>
-            <label>
-              <input type="file" accept={ALLOWED_EXTENSIONS} className="hidden" onChange={handleUpload} disabled={uploading} />
-              <Button asChild size="sm" disabled={uploading}>
-                <span className="cursor-pointer">
-                  {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
-                  Upload
-                </span>
-              </Button>
-            </label>
+            <div className="flex items-center gap-2">
+              {categories.length > 0 && (
+                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                  <SelectTrigger className="h-9 w-40 text-xs">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Uncategorised</SelectItem>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <label>
+                <input type="file" accept={ALLOWED_EXTENSIONS} className="hidden" onChange={handleUpload} disabled={uploading} />
+                <Button asChild size="sm" disabled={uploading}>
+                  <span className="cursor-pointer">
+                    {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+                    Upload
+                  </span>
+                </Button>
+              </label>
+            </div>
           </div>
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             {loading ? (
