@@ -209,7 +209,7 @@ const AdminClientDetail = () => {
       // Fetch documents stored under that user_id
       const { data: clientDocs } = await supabase
         .from("documents")
-        .select("id, file_name, file_path, file_size, category, created_at, user_id")
+        .select("id, file_name, file_path, file_size, category, created_at, user_id, category_id")
         .eq("user_id", profileRes.data.user_id)
         .order("created_at", { ascending: false });
       if (clientDocs) {
