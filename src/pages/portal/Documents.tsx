@@ -365,6 +365,84 @@ const Documents = () => {
       </div>
 
       <div className="space-y-6">
+        {/* Categories */}
+        {categories.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <FolderOpen className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Categories</h2>
+            </div>
+            <div className="bg-card border border-border rounded-xl divide-y divide-border overflow-hidden">
+              {categories.map((cat) => {
+                const catDocs = allDocs.filter((d) => d.category_id === cat.id);
+                const isOpen = expandedCat === cat.id;
+                return (
+                  <div key={cat.id}>
+                    <div className="flex items-center gap-3 p-4 hover:bg-muted/40">
+                      <button
+                        onClick={() => setExpandedCat(isOpen ? null : cat.id)}
+                        className="rounded-lg bg-muted p-2 shrink-0"
+                        aria-label={isOpen ? "Collapse" : "Expand"}
+                      >
+                        {isOpen ? (
+                          <ChevronDown className="h-4 w-4 text-primary" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-primary" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setExpandedCat(isOpen ? null : cat.id)}
+                        className="flex-1 min-w-0 text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{cat.name}</p>
+                          <Badge variant="secondary" className="text-[10px]">
+                            {catDocs.length} {catDocs.length === 1 ? "doc" : "docs"}
+                          </Badge>
+                        </div>
+                        {cat.description && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">{cat.description}</p>
+                        )}
+                      </button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={catDocs.length === 0 || zippingCatId === cat.id}
+                        onClick={() => downloadCategoryZip(cat)}
+                      >
+                        {zippingCatId === cat.id ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Package className="h-4 w-4 mr-1" />
+                        )}
+                        Download all
+                      </Button>
+                    </div>
+                    {isOpen && (
+                      <div className="bg-muted/20 border-t border-border">
+                        {catDocs.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-4">
+                            No documents in this category yet.
+                          </p>
+                        ) : (
+                          <div className="divide-y divide-border">
+                            {catDocs.map((d) => (
+                              <DocRow key={d.id} doc={d} showDelete={d.category === "client_upload"} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Categories are managed by Setlix. Download an entire category as a ZIP, or expand it to pick individual files.
+            </p>
+          </div>
+        )}
+
         {/* Requested Documents */}
         {docRequests.length > 0 && (
           <div>
