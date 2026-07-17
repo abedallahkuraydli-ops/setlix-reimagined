@@ -33,6 +33,7 @@ import { ClientMonthlyTransactions } from "@/components/admin/ClientMonthlyTrans
 import { AdminPendingRequestsSection } from "@/components/admin/AdminPendingRequestsSection";
 import { AdminMilestonesSection } from "@/components/admin/AdminMilestonesSection";
 import { MilestoneTracker } from "@/components/portal/MilestoneTracker";
+import { AdminDocumentCategoriesSection } from "@/components/admin/AdminDocumentCategoriesSection";
 
 import { UnauthorisedDownloadDialog } from "@/components/admin/UnauthorisedDownloadDialog";
 import { AdminDownloadPurposeDialog } from "@/components/admin/AdminDownloadPurposeDialog";
