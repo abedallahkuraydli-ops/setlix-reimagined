@@ -111,6 +111,12 @@ interface ClientDoc {
   category: string;
   created_at: string;
   user_id: string;
+  category_id: string | null;
+}
+
+interface DocCategory {
+  id: string;
+  name: string;
 }
 
 const AdminClientDetail = () => {
