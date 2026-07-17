@@ -46,6 +46,11 @@ const Documents = () => {
   const { toast } = useToast();
   const [uploads, setUploads] = useState<DocRecord[]>([]);
   const [issued, setIssued] = useState<DocRecord[]>([]);
+  const [allDocs, setAllDocs] = useState<DocRecord[]>([]);
+  const [categories, setCategories] = useState<DocCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("none");
+  const [expandedCat, setExpandedCat] = useState<string | null>(null);
+  const [zippingCatId, setZippingCatId] = useState<string | null>(null);
   const [docRequests, setDocRequests] = useState<DocRequest[]>([]);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +60,6 @@ const Documents = () => {
   const fetchDocs = useCallback(async () => {
     if (!user) return;
 
-    // Get profile id
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -64,10 +68,10 @@ const Documents = () => {
 
     if (profile) setProfileId(profile.id);
 
-    const [docsRes, reqRes] = await Promise.all([
+    const [docsRes, reqRes, catRes] = await Promise.all([
       supabase
         .from("documents")
-        .select("*")
+        .select("id, file_name, file_path, file_size, category, created_at, category_id")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
       profile
@@ -77,13 +81,23 @@ const Documents = () => {
             .eq("client_id", profile.id)
             .order("created_at", { ascending: false })
         : Promise.resolve({ data: [] }),
+      profile
+        ? supabase
+            .from("document_categories")
+            .select("id, name, description")
+            .eq("client_id", profile.id)
+            .order("position", { ascending: true })
+        : Promise.resolve({ data: [] as DocCategory[] }),
     ]);
 
     if (docsRes.data) {
-      setUploads(docsRes.data.filter((d: DocRecord) => d.category === "client_upload"));
-      setIssued(docsRes.data.filter((d: DocRecord) => d.category === "setlix_issued"));
+      const docs = docsRes.data as DocRecord[];
+      setAllDocs(docs);
+      setUploads(docs.filter((d) => d.category === "client_upload"));
+      setIssued(docs.filter((d) => d.category === "setlix_issued"));
     }
     if (reqRes.data) setDocRequests(reqRes.data as any);
+    if (catRes.data) setCategories(catRes.data as DocCategory[]);
     setLoading(false);
   }, [user]);
 
