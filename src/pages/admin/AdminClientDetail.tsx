@@ -131,6 +131,7 @@ const AdminClientDetail = () => {
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([]);
   const [clientUploads, setClientUploads] = useState<ClientDoc[]>([]);
   const [issuedDocs, setIssuedDocs] = useState<ClientDoc[]>([]);
+  const [docCategories, setDocCategories] = useState<DocCategory[]>([]);
   const [uploadingIssued, setUploadingIssued] = useState(false);
   const [loading, setLoading] = useState(true);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
