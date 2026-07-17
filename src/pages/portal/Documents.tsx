@@ -250,6 +250,45 @@ const Documents = () => {
     e.target.value = "";
   };
 
+  const downloadCategoryZip = async (cat: DocCategory) => {
+    setZippingCatId(cat.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-category-zip`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token ?? ""}`,
+          },
+          body: JSON.stringify({ category_id: cat.id }),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${cat.name.replace(/[^\w.-]+/g, "_")}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      toast({
+        title: "Download failed",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setZippingCatId(null);
+    }
+  };
+
   // Group doc requests by service
   const grouped = docRequests.reduce<Record<string, DocRequest[]>>((acc, dr) => {
     const key = (dr as any).client_services?.service_catalogue?.name || "General Documents";
