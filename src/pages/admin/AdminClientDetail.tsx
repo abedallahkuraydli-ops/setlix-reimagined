@@ -217,6 +217,12 @@ const AdminClientDetail = () => {
         setClientUploads(clientDocs.filter((d) => d.category === "client_upload"));
         setIssuedDocs(clientDocs.filter((d) => d.category === "setlix_issued"));
       }
+      const { data: catsData } = await supabase
+        .from("document_categories")
+        .select("id, name")
+        .eq("client_id", clientId)
+        .order("position", { ascending: true });
+      if (catsData) setDocCategories(catsData as DocCategory[]);
       // Fetch client email via edge function
       try {
         const { data: emailLookup } = await supabase.functions.invoke<{ email: string | null }>("get-user-email", {
