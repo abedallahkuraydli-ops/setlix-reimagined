@@ -132,6 +132,7 @@ const Documents = () => {
       category: "client_upload",
       mime_type: file.type,
       sha256_hash: sha256,
+      category_id: selectedCategoryId && selectedCategoryId !== "none" ? selectedCategoryId : null,
     }).select("id").single();
     if (dbError) toast({ title: "Error saving record", description: dbError.message, variant: "destructive" });
     else {
