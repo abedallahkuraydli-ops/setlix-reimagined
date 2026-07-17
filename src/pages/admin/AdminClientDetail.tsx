@@ -519,6 +519,21 @@ const AdminClientDetail = () => {
     fetchAll();
   };
 
+  const updateDocCategory = async (docId: string, categoryId: string | null) => {
+    const { error } = await supabase
+      .from("documents")
+      .update({ category_id: categoryId })
+      .eq("id", docId);
+    if (error) {
+      toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const patch = (list: ClientDoc[]) =>
+      list.map((d) => (d.id === docId ? { ...d, category_id: categoryId } : d));
+    setClientUploads(patch);
+    setIssuedDocs(patch);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
